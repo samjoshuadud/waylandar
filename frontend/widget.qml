@@ -90,8 +90,6 @@ ShellRoot {
         }
         color: "transparent"
         
-        Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-        
         // The Main Background
         Rectangle {
             anchors.fill: parent
