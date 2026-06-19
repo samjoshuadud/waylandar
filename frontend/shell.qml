@@ -18,7 +18,28 @@ ShellRoot {
             waitForEnd: true
             onStreamFinished: {
                 try {
-                    calendarEvents = JSON.parse(text);
+                    let parsed = JSON.parse(text);
+                    let now = new Date();
+                    let todayStr = now.toDateString();
+                    
+                    let tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    let tomorrowStr = tomorrow.toDateString();
+                    
+                    for (let i = 0; i < parsed.length; i++) {
+                        let d = new Date(parsed[i].start);
+                        let dStr = d.toDateString();
+                        
+                        if (dStr === todayStr) {
+                            parsed[i].sectionTitle = "Today";
+                        } else if (dStr === tomorrowStr) {
+                            parsed[i].sectionTitle = "Tomorrow";
+                        } else {
+                            parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
+                        }
+                    }
+                    
+                    calendarEvents = parsed;
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }

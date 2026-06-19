@@ -13,7 +13,7 @@ Rectangle {
         id: cardMouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor // Changes cursor to a pointer
+        cursorShape: Qt.PointingHandCursor 
         
         onClicked: {
             if (eventData && eventData.link) {
