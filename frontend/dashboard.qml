@@ -5,7 +5,27 @@ import Quickshell.Wayland
 import "components" as Components
 
 ShellRoot {
-    property var calendarEvents: []
+    property var allEvents: []
+    property string selectedDateStr: ""
+    
+    // Dynamically computes what shows up in the right pane
+    property var displayedEvents: {
+        if (selectedDateStr === "") {
+            // Upcoming events only
+            let now = new Date();
+            let todayStr = now.toDateString();
+            return allEvents.filter(function(e) {
+                let d = new Date(e.start);
+                return d >= now || (e.end && new Date(e.end) >= now) || d.toDateString() === todayStr;
+            });
+        } else {
+            // Filtered: Exact selected date 
+            return allEvents.filter(function(e) {
+                return new Date(e.start).toDateString() === selectedDateStr;
+            });
+        }
+    }
+    
     property var activeEventDays: ({})
     property var monthDays: []
     property string currentMonthStr: ""
@@ -51,7 +71,6 @@ ShellRoot {
                 try {
                     let parsed = JSON.parse(text);
                     let active = {};
-                    let upcomingList = [];
                     
                     let now = new Date();
                     let todayStr = now.toDateString();
@@ -65,19 +84,16 @@ ShellRoot {
                         
                         active[dStr] = true;
                         
-                        if (d >= now || (parsed[i].end && new Date(parsed[i].end) >= now) || dStr === todayStr) {
-                            if (dStr === todayStr) {
-                                parsed[i].sectionTitle = "Today";
-                            } else if (dStr === tomorrowStr) {
-                                parsed[i].sectionTitle = "Tomorrow";
-                            } else {
-                                parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
-                            }
-                            upcomingList.push(parsed[i]);
+                        if (dStr === todayStr) {
+                            parsed[i].sectionTitle = "Today";
+                        } else if (dStr === tomorrowStr) {
+                            parsed[i].sectionTitle = "Tomorrow";
+                        } else {
+                            parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
                         }
                     }
                     
-                    calendarEvents = upcomingList;
+                    allEvents = parsed;
                     activeEventDays = active;
                 } catch(e) {
                     console.log("Failed to parse JSON");
@@ -184,7 +200,10 @@ ShellRoot {
                                 color: modelData.isCurrentMonth ? Qt.rgba(255/255, 255/255, 255/255, 0.05) : "transparent"
                                 radius: 12
                                 
-                                // Highlight today's date!
+                                // Dim all unselected days to make the clicked one stand out!
+                                opacity: selectedDateStr === "" || selectedDateStr === modelData.dateStr ? 1.0 : 0.3
+                                Behavior on opacity { NumberAnimation { duration: 200 } }
+                                
                                 border.color: modelData.dateStr === new Date().toDateString() ? "#f38ba8" : "transparent"
                                 border.width: 2
                                 
@@ -197,13 +216,25 @@ ShellRoot {
                                     color: modelData.isCurrentMonth ? "#cdd6f4" : "#45475a"
                                 }
                                 
-                                // Event indicator dot!
                                 Rectangle {
                                     width: 8; height: 8; radius: 4
                                     color: "#89b4fa"
                                     anchors.bottom: parent.bottom; anchors.bottomMargin: 10
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     visible: activeEventDays[modelData.dateStr] === true
+                                }
+                                
+                                // Click to select/unselect the day
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (selectedDateStr === modelData.dateStr) {
+                                            selectedDateStr = ""; // unpress
+                                        } else {
+                                            selectedDateStr = modelData.dateStr; // press
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -227,7 +258,8 @@ ShellRoot {
                         spacing: 20
                         
                         Text {
-                            text: "Agenda"
+                            // Automatically changes the title if a day is selected
+                            text: selectedDateStr === "" ? "Agenda" : "Agenda - " + new Date(selectedDateStr).toLocaleDateString(Qt.locale("en_US"), "ddd, MMM d")
                             font.pixelSize: 24
                             font.bold: true
                             font.family: "Inter"
@@ -238,7 +270,7 @@ ShellRoot {
                         Components.CalendarList {
                             width: parent.width
                             height: parent.height - 44
-                            events: calendarEvents
+                            events: displayedEvents
                         }
                     }
                 }
