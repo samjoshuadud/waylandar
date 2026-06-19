@@ -30,6 +30,10 @@ package() {
   install -d "$pkgdir/usr/share/waylandar"
   cp -r frontend backend theme_template.qml "$pkgdir/usr/share/waylandar/"
 
+  # Remove local Theme to force dynamic loading
+  mv "$pkgdir/usr/share/waylandar/frontend/Theme.qml" "$pkgdir/usr/share/waylandar/fallback_Theme.qml"
+  rm -f "$pkgdir/usr/share/waylandar/frontend/qmldir"
+
   # Create the global executable bash wrappers
   install -d "$pkgdir/usr/bin"
   
@@ -40,12 +44,28 @@ EOF
 
   cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
 #!/bin/bash
-exec quickshell -p /usr/share/waylandar/frontend/widget.qml
+mkdir -p ~/.config/waylandar/frontend
+ln -sfn /usr/share/waylandar/frontend/* ~/.config/waylandar/frontend/
+cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
+chmod 644 ~/.config/waylandar/theme_template.qml
+if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
+  cp /usr/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
+  chmod 644 ~/.config/waylandar/frontend/Theme.qml
+fi
+exec quickshell -p ~/.config/waylandar/frontend/widget.qml
 EOF
 
   cat > "$pkgdir/usr/bin/waylandar-dashboard" <<EOF
 #!/bin/bash
-exec quickshell -p /usr/share/waylandar/frontend/dashboard.qml
+mkdir -p ~/.config/waylandar/frontend
+ln -sfn /usr/share/waylandar/frontend/* ~/.config/waylandar/frontend/
+cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
+chmod 644 ~/.config/waylandar/theme_template.qml
+if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
+  cp /usr/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
+  chmod 644 ~/.config/waylandar/frontend/Theme.qml
+fi
+exec quickshell -p ~/.config/waylandar/frontend/dashboard.qml
 EOF
 
   # Make all wrappers executable
