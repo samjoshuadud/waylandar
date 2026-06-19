@@ -82,7 +82,12 @@ ShellRoot {
         }
         
         implicitWidth: 420
-        implicitHeight: Math.min(800, 100 + (calendarEvents.length * 75))
+        implicitHeight: {
+            if (calendarEvents.length === 0) {
+                return pythonScript.running ? 250 : 180;
+            }
+            return Math.min(800, 130 + (calendarEvents.length * 75));
+        }
         color: "transparent"
         
         Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
@@ -205,7 +210,7 @@ ShellRoot {
 
                 Item {
                     width: parent.width
-                    height: parent.height - 50
+                    height: parent.height - 65
 
                     Components.CalendarList {
                         anchors.fill: parent
@@ -244,15 +249,6 @@ ShellRoot {
                         }
                     }
                 }
-            }
-            
-            Text {
-                visible: calendarEvents.length === 0 && !pythonScript.running
-                text: "Your schedule is clear! 󰄬"
-                font.pixelSize: 14
-                font.italic: true
-                color: Theme.colorOnSurfaceVariant
-                anchors.centerIn: parent
             }
         }
     }
