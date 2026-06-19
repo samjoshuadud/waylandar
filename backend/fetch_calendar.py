@@ -23,6 +23,7 @@ def authenticate():
     token_path = os.path.join(cache_dir, 'token.json')
 
     creds = None
+    just_authenticated = False
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
@@ -41,11 +42,12 @@ def authenticate():
 
             flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
             creds = flow.run_local_server(port=0)
+            just_authenticated = True
 
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
 
-    return creds
+    return creds, just_authenticated
 
 def get_upcoming_events(creds):
     from googleapiclient.discovery import build
@@ -110,6 +112,12 @@ def get_upcoming_events(creds):
     return output
 
 if __name__ == '__main__':
-    creds = authenticate()
+    creds, just_authenticated = authenticate()
+    
+    if just_authenticated:
+        print("\nSuccessfully authenticated with Google Calendar!")
+        print("You can now safely close this terminal and use the Waylandar widget.")
+        sys.exit(0)
+        
     events = get_upcoming_events(creds)
     print(json.dumps(events, indent=2))
