@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
 import json
+import os
 import os.path
+import sys
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,23 +13,36 @@ def authenticate():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
+    config_dir = os.path.expanduser('~/.config/waylandar')
+    cache_dir = os.path.expanduser('~/.cache/waylandar')
+    
+    os.makedirs(config_dir, exist_ok=True)
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    creds_path = os.path.join(config_dir, 'credentials.json')
+    token_path = os.path.join(cache_dir, 'token.json')
+
     creds = None
 
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            if not os.path.exists('credentials.json'):
-                print(json.dumps({"error": "Missing credentials.json. Please follow the tutorial to get your API key."}))
+            if not os.path.exists(creds_path):
+                print(json.dumps({"error": f"Missing credentials.json at {creds_path}. Please follow the tutorial to get your API key."}))
                 exit(1)
 
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            if '--background' in sys.argv:
+                print(json.dumps({"error": "Authentication required. Please open a terminal and run:\ncd ~/Documents/waylandar/backend && uv run python fetch_calendar.py\nto authorize with Google."}))
+                exit(1)
+
+            flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
             creds = flow.run_local_server(port=0)
 
-        with open('token.json', 'w') as token:
+        with open(token_path, 'w') as token:
             token.write(creds.to_json())
 
     return creds
@@ -41,9 +55,11 @@ def get_upcoming_events(creds):
 
     service = build('calendar', 'v3', credentials=creds)
 
-    if len(sys.argv) == 3:
-        year = int(sys.argv[1])
-        month = int(sys.argv[2])
+    args = [arg for arg in sys.argv if arg != '--background']
+
+    if len(args) == 3:
+        year = int(args[1])
+        month = int(args[2])
         start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
         last_day = calendar.monthrange(year, month)[1]
         end_date = datetime.datetime(year, month, last_day, 23, 59, 59, tzinfo=datetime.timezone.utc)
