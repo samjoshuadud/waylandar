@@ -4,12 +4,26 @@ ListView {
     property var events: []
     
     model: events
-    spacing: 10
+    spacing: 12
     clip: true
+    
+    // Tracks which card is currently expanded!
+    property int expandedIndex: -1
 
     delegate: CalendarCard {
         width: ListView.view.width
         eventData: modelData 
+        
+        // Pass down the expansion state
+        isExpanded: expandedIndex === index
+        
+        onToggleExpand: {
+            if (expandedIndex === index) {
+                expandedIndex = -1; // collapse
+            } else {
+                expandedIndex = index; // expand
+            }
+        }
     }
 
     Text {
