@@ -1,4 +1,5 @@
 import QtQuick
+import ".."
 
 Rectangle {
     property var eventData: null
@@ -8,7 +9,7 @@ Rectangle {
     height: isExpanded ? Math.max(110, 80 + expandedDetails.height) : 55
     Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
     
-    color: cardMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.09) : Qt.rgba(255/255, 255/255, 255/255, 0.04)
+    color: cardMouseArea.containsMouse ? Theme.surfaceVariant : Theme.surface
     radius: 12
     clip: true
     
@@ -39,7 +40,7 @@ Rectangle {
             height: 34
             anchors.verticalCenter: parent.verticalCenter
             radius: 2
-            color: "#f38ba8" 
+            color: Theme.tertiary 
         }
 
         // Text details container
@@ -53,7 +54,7 @@ Rectangle {
                 font.pixelSize: 14
                 font.bold: true
                 font.family: "Inter"
-                color: "#cdd6f4"
+                color: Theme.colorOnBackground
                 elide: Text.ElideRight
                 width: parent.width
             }
@@ -67,7 +68,7 @@ Rectangle {
                 }
                 font.pixelSize: 12
                 font.family: "Inter"
-                color: "#a6adc8"
+                color: Theme.colorOnSurfaceVariant
             }
         }
     }
@@ -96,7 +97,7 @@ Rectangle {
                 text: eventData && eventData.description ? eventData.description : "No additional description."
                 font.pixelSize: 12
                 font.family: "Inter"
-                color: Qt.rgba(166/255, 173/255, 200/255, 0.8)
+                color: Theme.colorOnSurfaceVariant
                 wrapMode: Text.WordWrap
                 width: parent.width
             }
@@ -106,7 +107,7 @@ Rectangle {
                 width: 140
                 height: 32
                 radius: 6
-                color: linkMouseArea.containsMouse ? "#b4befe" : "#89b4fa"
+                color: linkMouseArea.containsMouse ? Theme.secondary : Theme.primary
                 Behavior on color { ColorAnimation { duration: 150 } }
                 
                 Row {
@@ -115,7 +116,7 @@ Rectangle {
                     Text {
                         text: "󰌹" // Optional Nerd Font Link icon
                         font.pixelSize: 14
-                        color: "#1e1e2e"
+                        color: Theme.colorOnPrimary
                         visible: false // Just in case they don't have nerd fonts
                     }
                     Text {
@@ -123,7 +124,7 @@ Rectangle {
                         font.pixelSize: 12
                         font.bold: true
                         font.family: "Inter"
-                        color: "#1e1e2e"
+                        color: Theme.colorOnPrimary
                     }
                 }
 

@@ -159,9 +159,9 @@ ShellRoot {
             width: 1000
             height: 700
             anchors.centerIn: parent
-            color: Qt.rgba(5/255, 5/255, 12/255, 0.95)
+            color: Theme.background
             radius: 20
-            border.color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
+            border.color: Theme.outline
             border.width: 1
             clip: true
 
@@ -192,8 +192,8 @@ ShellRoot {
                             // Previous Month Button
                             Rectangle {
                                 width: 32; height: 32; radius: 16
-                                color: prevMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.1) : "transparent"
-                                Text { text: "◀"; anchors.centerIn: parent; color: "#89b4fa"; font.pixelSize: 14 }
+                                color: prevMouseArea.containsMouse ? Theme.outline : "transparent"
+                                Text { text: "◀"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
                                 MouseArea {
                                     id: prevMouseArea
                                     anchors.fill: parent
@@ -212,15 +212,15 @@ ShellRoot {
                                 font.pixelSize: 28
                                 font.bold: true
                                 font.family: "Inter"
-                                color: "#cdd6f4"
+                                color: Theme.colorOnBackground
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             
                             // Next Month Button
                             Rectangle {
                                 width: 32; height: 32; radius: 16
-                                color: nextMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.1) : "transparent"
-                                Text { text: "▶"; anchors.centerIn: parent; color: "#89b4fa"; font.pixelSize: 14 }
+                                color: nextMouseArea.containsMouse ? Theme.outline : "transparent"
+                                Text { text: "▶"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
                                 MouseArea {
                                     id: nextMouseArea
                                     anchors.fill: parent
@@ -246,7 +246,7 @@ ShellRoot {
                                     font.pixelSize: 14
                                     font.bold: true
                                     font.family: "Inter"
-                                    color: "#89b4fa"
+                                    color: Theme.primary
                                     horizontalAlignment: Text.AlignHCenter
                                 }
                             }
@@ -270,14 +270,14 @@ ShellRoot {
                                 width: calGrid.cellWidth - 10
                                 height: calGrid.cellHeight - 10
                                 
-                                color: modelData.isCurrentMonth ? Qt.rgba(255/255, 255/255, 255/255, 0.12) : Qt.rgba(255/255, 255/255, 255/255, 0.03)
+                                color: modelData.isCurrentMonth ? Theme.outline : Theme.surface
                                 radius: 12
                                 
                                 // Dim all unselected days, but less aggressively (from 0.3 up to 0.5)
                                 opacity: selectedDateStr === "" || selectedDateStr === modelData.dateStr ? 1.0 : 0.5
                                 Behavior on opacity { NumberAnimation { duration: 200 } }
                                 
-                                border.color: modelData.dateStr === new Date().toDateString() ? "#f38ba8" : "transparent"
+                                border.color: modelData.dateStr === new Date().toDateString() ? Theme.tertiary : "transparent"
                                 border.width: 2
                                 
                                 Text {
@@ -287,12 +287,12 @@ ShellRoot {
                                     font.family: "Inter"
                                     font.bold: modelData.dateStr === new Date().toDateString()
                                     // Text color is more solid now
-                                    color: modelData.isCurrentMonth ? "#cdd6f4" : "#6c7086"
+                                    color: modelData.isCurrentMonth ? Theme.colorOnBackground : Theme.colorOnSurfaceVariant
                                 }
                                 
                                 Rectangle {
                                     width: 8; height: 8; radius: 4
-                                    color: "#89b4fa"
+                                    color: Theme.primary
                                     anchors.bottom: parent.bottom; anchors.bottomMargin: 10
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     visible: activeEventDays[modelData.dateStr] === true
@@ -321,7 +321,7 @@ ShellRoot {
                         height: 32
                         color: "transparent"
                         radius: 16
-                        border.color: "#89b4fa"
+                        border.color: Theme.primary
                         border.width: 3
                         visible: opacity > 0
                         opacity: isFetching ? 1.0 : 0.0
@@ -329,7 +329,7 @@ ShellRoot {
 
                         Rectangle {
                             width: 16; height: 16; 
-                            color: Qt.rgba(5/255, 5/255, 12/255, 1)
+                            color: Theme.background
                             anchors.top: parent.top; anchors.right: parent.right
                         }
 
@@ -346,7 +346,7 @@ ShellRoot {
                 Rectangle {
                     width: 1
                     height: parent.height
-                    color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
+                    color: Theme.outline
                 }
 
                 // right pane for the agenda tasks
@@ -366,7 +366,7 @@ ShellRoot {
                             font.pixelSize: 24
                             font.bold: true
                             font.family: "Inter"
-                            color: "#cdd6f4"
+                            color: Theme.colorOnBackground
                         }
                         
                         // Re-using our modular widget list directly in the dashboard
@@ -390,7 +390,7 @@ ShellRoot {
                         height: 32
                         color: "transparent"
                         radius: 16
-                        border.color: "#89b4fa"
+                        border.color: Theme.primary
                         border.width: 3
                         visible: opacity > 0
                         opacity: isFetching ? 1.0 : 0.0
@@ -398,7 +398,7 @@ ShellRoot {
 
                         Rectangle {
                             width: 16; height: 16; 
-                            color: Qt.rgba(5/255, 5/255, 12/255, 1)
+                            color: Theme.background
                             anchors.top: parent.top; anchors.right: parent.right
                         }
 

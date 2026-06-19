@@ -90,9 +90,9 @@ ShellRoot {
         // The Main Background
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(5/255, 5/255, 12/255, 0.92)
+            color: Theme.background
             radius: 20
-            border.color: Qt.rgba(255/255, 255/255, 255/255, 0.08)
+            border.color: Theme.outline
             border.width: 1
 
             Column {
@@ -113,7 +113,7 @@ ShellRoot {
                         font.pixelSize: 18
                         font.bold: true
                         font.family: "Inter"
-                        color: "#cdd6f4"
+                        color: Theme.colorOnBackground
                         elide: Text.ElideRight
                     }
 
@@ -126,7 +126,7 @@ ShellRoot {
                         text: pythonScript.running ? "" : "Syncs in " + minutesUntilSync + "m"
                         font.pixelSize: 12
                         font.italic: true
-                        color: Qt.rgba(255/255, 255/255, 255/255, 0.4)
+                        color: Theme.colorOnSurfaceVariant
                     }
 
                     Rectangle {
@@ -136,7 +136,7 @@ ShellRoot {
                         width: 50
                         height: 26
                         radius: 6
-                        color: syncMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.15) : Qt.rgba(255/255, 255/255, 255/255, 0.04)
+                        color: syncMouseArea.containsMouse ? Theme.surfaceVariant : Theme.surface
                         
                         Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -146,7 +146,7 @@ ShellRoot {
                             font.pixelSize: 12
                             font.bold: true
                             font.family: "Inter"
-                            color: pythonScript.running ? "#a6adc8" : "#89b4fa"
+                            color: pythonScript.running ? Theme.colorOnSurfaceVariant : Theme.primary
                         }
 
                         MouseArea {
@@ -200,7 +200,7 @@ ShellRoot {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
+                    color: Theme.outline
                 }
 
                 Item {
@@ -223,14 +223,14 @@ ShellRoot {
                         height: 32
                         color: "transparent"
                         radius: 16
-                        border.color: "#89b4fa"
+                        border.color: Theme.primary
                         border.width: 3
                         visible: pythonScript.running
 
                         // Creates the cutout for the spinner
                         Rectangle {
                             width: 16; height: 16; 
-                            color: Qt.rgba(5/255, 5/255, 12/255, 1) // Matches background
+                            color: Theme.background // Matches background
                             anchors.top: parent.top; anchors.right: parent.right
                         }
 
@@ -251,7 +251,7 @@ ShellRoot {
                 text: "Your schedule is clear! 󰄬"
                 font.pixelSize: 14
                 font.italic: true
-                color: "#a6adc8"
+                color: Theme.colorOnSurfaceVariant
                 anchors.centerIn: parent
             }
         }

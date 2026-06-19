@@ -1,4 +1,5 @@
 import QtQuick
+import ".."
 
 ListView {
     property var events: []
@@ -28,10 +29,10 @@ ListView {
 
     Text {
         visible: parent.events.length === 0 && !pythonScript.running
-        text: "Your schedule is clear!"
+        text: "Your schedule is clear! 󰄬"
         font.pixelSize: 14
         font.italic: true
-        color: "#a6adc8"
+        color: Theme.colorOnSurfaceVariant
         anchors.centerIn: parent
     }
 
@@ -48,14 +49,14 @@ ListView {
             font.pixelSize: 13
             font.bold: true
             font.family: "Inter"
-            color: "#89b4fa" 
+            color: Theme.primary 
         }
         
         Rectangle {
             anchors.bottom: parent.bottom
             width: parent.width
             height: 1
-            color: Qt.rgba(255/255, 255/255, 255/255, 0.05)
+            color: Theme.outlineVariant
         }
     }
 }
