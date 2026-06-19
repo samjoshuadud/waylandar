@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import "components" as Components
 
 ShellRoot {
     property var calendarEvents: []
@@ -40,10 +41,10 @@ ShellRoot {
         width: 380
         height: Math.min(800, 100 + (calendarEvents.length * 75))
         color: "transparent"
-
+        
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(17/255, 17/255, 27/255, 0.75) 
+            color: Qt.rgba(5/255, 5/255, 12/255, 0.92)
             radius: 20
             border.color: Qt.rgba(255/255, 255/255, 255/255, 0.08)
             border.width: 1
@@ -53,15 +54,12 @@ ShellRoot {
                 anchors.margins: 24
                 spacing: 15
 
-                Row {
-                    spacing: 12
-                    Text {
-                        text: "Upcoming Schedule"
-                        font.pixelSize: 18
-                        font.bold: true
-                        font.family: "Inter"
-                        color: "#cdd6f4" // Soft white
-                    }
+                Text {
+                    text: "Upcoming Schedule"
+                    font.pixelSize: 18
+                    font.bold: true
+                    font.family: "Inter"
+                    color: "#cdd6f4"
                 }
 
                 Rectangle {
@@ -70,58 +68,10 @@ ShellRoot {
                     color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
                 }
 
-                ListView {
-                    id: eventList
+                Components.CalendarList {
                     width: parent.width
                     height: parent.height - 50
-                    model: calendarEvents
-                    spacing: 10
-                    clip: true
-
-                    delegate: Rectangle {
-                        width: eventList.width
-                        height: 65
-                        color: Qt.rgba(255/255, 255/255, 255/255, 0.04) // Very subtle highlight
-                        radius: 12
-                        
-                        Row {
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 15
-
-                            Rectangle {
-                                width: 4
-                                height: parent.height
-                                radius: 2
-                                color: "#f38ba8" // Red accent
-                            }
-
-                            Column {
-                                spacing: 4
-                                width: parent.width - 30
-
-                                Text {
-                                    text: modelData.title
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                    font.family: "Inter"
-                                    color: "#cdd6f4"
-                                    elide: Text.ElideRight
-                                    width: parent.width
-                                }
-
-                                Text {
-                                    text: {
-                                        var d = new Date(modelData.start);
-                                        return d.toLocaleDateString(Qt.locale(), "ddd MMM d") + " at " + d.toLocaleTimeString(Qt.locale(), "h:mm AP");
-                                    }
-                                    font.pixelSize: 12
-                                    font.family: "Inter"
-                                    color: "#a6adc8"
-                                }
-                            }
-                        }
-                    }
+                    events: calendarEvents
                 }
             }
             
