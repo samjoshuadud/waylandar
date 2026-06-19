@@ -165,6 +165,23 @@ ShellRoot {
             border.width: 1
             clip: true
 
+            // pop-in animation
+            scale: 0.8
+            opacity: 0.0
+            
+            NumberAnimation on scale {
+                to: 1.0
+                duration: 400
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.1
+            }
+            
+            NumberAnimation on opacity {
+                to: 1.0
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+
             // catch clicks so they dont pass through to the background and close the window
             MouseArea {
                 anchors.fill: parent
