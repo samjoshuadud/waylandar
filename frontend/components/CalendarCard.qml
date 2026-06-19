@@ -53,7 +53,8 @@ Rectangle {
                 text: {
                     if (!eventData) return "";
                     var d = new Date(eventData.start);
-                    return d.toLocaleDateString(Qt.locale(), "ddd MMM d") + " at " + d.toLocaleTimeString(Qt.locale(), "h:mm AP");
+                    var loc = Qt.locale("en_US"); // Forces English!
+                    return d.toLocaleDateString(loc, "ddd MMM d") + " at " + d.toLocaleTimeString(loc, "h:mm AP");
                 }
                 font.pixelSize: 12
                 font.family: "Inter"
