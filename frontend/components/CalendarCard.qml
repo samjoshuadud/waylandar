@@ -3,7 +3,7 @@ import QtQuick
 Rectangle {
     property var eventData: null
     
-    height: 65
+    height: eventData && eventData.description ? 95 : 65
     color: cardMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.09) : Qt.rgba(255/255, 255/255, 255/255, 0.04)
     radius: 12
     
@@ -59,6 +59,19 @@ Rectangle {
                 font.pixelSize: 12
                 font.family: "Inter"
                 color: "#a6adc8"
+            }
+
+            // Description block (only shows if description exists)
+            Text {
+                text: eventData && eventData.description ? eventData.description : ""
+                font.pixelSize: 11
+                font.family: "Inter"
+                color: Qt.rgba(166/255, 173/255, 200/255, 0.7) // Faded text
+                elide: Text.ElideRight
+                maximumLineCount: 2
+                wrapMode: Text.WordWrap
+                width: parent.width
+                visible: text !== ""
             }
         }
     }
