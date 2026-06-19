@@ -29,7 +29,6 @@ Rectangle {
         width: parent.width
         height: 55
         anchors.top: parent.top
-        anchors.margins: 12
         spacing: 15
         
         Item { width: 1; height: 1 } // Padding
