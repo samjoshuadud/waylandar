@@ -5,7 +5,7 @@ Rectangle {
     property bool isExpanded: false
     signal toggleExpand()
     
-    height: isExpanded ? Math.max(120, 90 + expandedDetails.height) : 65
+    height: isExpanded ? Math.max(110, 80 + expandedDetails.height) : 55
     Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
     
     color: cardMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.09) : Qt.rgba(255/255, 255/255, 255/255, 0.04)
@@ -27,7 +27,7 @@ Rectangle {
     Row {
         id: topRow
         width: parent.width
-        height: 65
+        height: 55
         anchors.top: parent.top
         anchors.margins: 12
         spacing: 15
@@ -37,7 +37,7 @@ Rectangle {
         // Left color accent bar
         Rectangle {
             width: 4
-            height: 41
+            height: 34
             anchors.verticalCenter: parent.verticalCenter
             radius: 2
             color: "#f38ba8" 

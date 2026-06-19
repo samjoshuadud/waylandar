@@ -97,8 +97,8 @@ ShellRoot {
 
             Column {
                 anchors.fill: parent
-                anchors.margins: 24
-                spacing: 15
+                anchors.margins: 30
+                spacing: 20
 
                 Item {
                     width: parent.width

@@ -177,7 +177,7 @@ ShellRoot {
 
                 // left pane for the visual calendar grid
                 Item {
-                    width: parent.width * 0.6
+                    width: parent.width * 0.6 - 30
                     height: parent.height
 
                     Column {
@@ -356,9 +356,11 @@ ShellRoot {
 
                     Column {
                         anchors.fill: parent
+                        anchors.margins: 20
                         spacing: 20
                         
                         Text {
+                            id: agendaTitle
                             // Automatically changes the title if a day is selected
                             text: selectedDateStr === "" ? "Agenda" : "Agenda - " + new Date(selectedDateStr).toLocaleDateString(Qt.locale("en_US"), "ddd, MMM d")
                             font.pixelSize: 24
@@ -371,7 +373,7 @@ ShellRoot {
                         Components.CalendarList {
                             id: rightAgendaList
                             width: parent.width
-                            height: parent.height - 44
+                            height: parent.height - agendaTitle.height - 20
                             events: displayedEvents
                             
                             // Dim the agenda list when fetching
