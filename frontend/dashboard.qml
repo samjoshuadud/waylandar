@@ -81,9 +81,8 @@ ShellRoot {
 
     Process {
         id: pythonScript
-        workingDirectory: "/home/punisher/Documents/waylandar/backend"
         // Pass the year and month down to python!
-        command: ["/home/punisher/Documents/waylandar/backend/.venv/bin/python", "/home/punisher/Documents/waylandar/backend/fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString(), "--background"]
+        command: ["waylandar-auth", currentViewYear.toString(), (currentViewMonth + 1).toString(), "--background"]
         running: true
         
         stdout: StdioCollector {

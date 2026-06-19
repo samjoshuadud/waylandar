@@ -37,8 +37,7 @@ def authenticate():
                 exit(1)
 
             if '--background' in sys.argv:
-                backend_dir = os.path.abspath(os.path.dirname(__file__))
-                print(json.dumps({"error": f"Google Auth Required.\nPlease run this in your terminal:\n\ncd {backend_dir} && uv run python fetch_calendar.py"}))
+                print(json.dumps({"error": "Google Auth Required.\nPlease run this in your terminal:\n\nwaylandar-auth"}))
                 exit(1)
 
             flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)

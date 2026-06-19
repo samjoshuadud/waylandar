@@ -11,8 +11,7 @@ ShellRoot {
 
     Process {
         id: pythonScript
-        workingDirectory: "/home/punisher/Documents/waylandar/backend"
-        command: [".venv/bin/python", "fetch_calendar.py", "--background"]
+        command: ["waylandar-auth", "--background"]
         running: true
         
         stdout: StdioCollector {

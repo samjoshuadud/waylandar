@@ -9,20 +9,61 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+        google-api-python-client
+        google-auth-httplib2
+        google-auth-oauthlib
+      ]);
+
+      waylandarPkg = pkgs.stdenv.mkDerivation {
+        pname = "waylandar";
+        version = "1.0.0";
+        src = ./.;
+
+        buildInputs = [ pkgs.makeWrapper ];
+
+        installPhase = ''
+          mkdir -p $out/bin
+          mkdir -p $out/share/waylandar
+
+          cp -r frontend backend theme_template.qml $out/share/waylandar/
+
+          # Wrap the python auth script
+          cat > $out/bin/waylandar-auth <<EOF
+          #!${pkgs.bash}/bin/bash
+          exec ${pythonEnv}/bin/python $out/share/waylandar/backend/fetch_calendar.py "\$@"
+          EOF
+          chmod +x $out/bin/waylandar-auth
+
+          # Wrap the quickshell widget launcher
+          cat > $out/bin/waylandar-widget <<EOF
+          #!${pkgs.bash}/bin/bash
+          exec ${pkgs.quickshell}/bin/quickshell -p $out/share/waylandar/frontend/widget.qml
+          EOF
+          chmod +x $out/bin/waylandar-widget
+
+          # Wrap the quickshell dashboard launcher
+          cat > $out/bin/waylandar-dashboard <<EOF
+          #!${pkgs.bash}/bin/bash
+          exec ${pkgs.quickshell}/bin/quickshell -p $out/share/waylandar/frontend/dashboard.qml
+          EOF
+          chmod +x $out/bin/waylandar-dashboard
+        '';
+      };
     in
     {
+      packages.${system}.default = waylandarPkg;
+
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          quickshell
-          uv
-          python311
+        buildInputs = [
+          pkgs.quickshell
+          pkgs.uv
+          pythonEnv
         ];
 
         shellHook = ''
-          echo "hypr-gcal development environment loaded!"
-          echo "Run 'uv run backend/fetch_calendar.py' to test the backend."
-          echo "Run 'quickshell -p frontend/widget.qml' for the desktop widget."
-          echo "Run 'quickshell -p frontend/dashboard.qml' for the full dashboard overlay."
+          echo "waylandar development environment loaded!"
         '';
       };
     };
