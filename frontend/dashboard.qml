@@ -36,6 +36,7 @@ ShellRoot {
     property var activeEventDays: ({})
     property var monthDays: []
     property string currentMonthStr: ""
+    property string authError: ""
     
     // Tracks when the python script is pulling data
     property bool isFetching: true
@@ -82,7 +83,7 @@ ShellRoot {
         id: pythonScript
         workingDirectory: "/home/punisher/Documents/waylandar/backend"
         // Pass the year and month down to python!
-        command: [".venv/bin/python", "fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString()]
+        command: ["/home/punisher/Documents/waylandar/backend/.venv/bin/python", "/home/punisher/Documents/waylandar/backend/fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString(), "--background"]
         running: true
         
         stdout: StdioCollector {
@@ -90,6 +91,16 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsed = JSON.parse(text);
+                    
+                    if (parsed.error) {
+                        authError = parsed.error;
+                        allEvents = [];
+                        activeEventDays = {};
+                        isFetching = false;
+                        return;
+                    }
+                    
+                    authError = "";
                     let active = {};
                     
                     let now = new Date();
@@ -392,6 +403,7 @@ ShellRoot {
                             width: parent.width
                             height: parent.height - agendaTitle.height - 20
                             events: displayedEvents
+                            errorMessage: authError
                             
                             // Dim the agenda list when fetching
                             opacity: isFetching ? 0.3 : 1.0

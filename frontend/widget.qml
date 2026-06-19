@@ -7,11 +7,12 @@ import "components" as Components
 ShellRoot {
     property var calendarEvents: []
     property int minutesUntilSync: 60
+    property string authError: ""
 
     Process {
         id: pythonScript
         workingDirectory: "/home/punisher/Documents/waylandar/backend"
-        command: [".venv/bin/python", "fetch_calendar.py"]
+        command: [".venv/bin/python", "fetch_calendar.py", "--background"]
         running: true
         
         stdout: StdioCollector {
@@ -19,6 +20,14 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsed = JSON.parse(text);
+                    
+                    if (parsed.error) {
+                        authError = parsed.error;
+                        calendarEvents = [];
+                        return;
+                    }
+                    
+                    authError = "";
                     let now = new Date();
                     let todayStr = now.toDateString();
                     
@@ -83,6 +92,9 @@ ShellRoot {
         
         implicitWidth: 420
         implicitHeight: {
+            if (authError !== "") {
+                return 250;
+            }
             if (calendarEvents.length === 0) {
                 return pythonScript.running ? 250 : 180;
             }
@@ -213,6 +225,7 @@ ShellRoot {
                     Components.CalendarList {
                         anchors.fill: parent
                         events: calendarEvents
+                        errorMessage: authError
                         
                         // Fades the list out slightly while fetching new data
                         opacity: pythonScript.running ? 0.3 : 1.0

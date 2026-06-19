@@ -10,6 +10,7 @@ ListView {
     
     // Tracks which card is currently expanded!
     property int expandedIndex: -1
+    property string errorMessage: ""
 
     delegate: CalendarCard {
         width: ListView.view.width
@@ -28,12 +29,32 @@ ListView {
     }
 
     Text {
-        visible: parent.events.length === 0 && !pythonScript.running
-        text: "Your schedule is clear! 󰄬"
+        visible: parent.events.length === 0 && !pythonScript.running && errorMessage === ""
+        text: "Your schedule is clear!"
         font.pixelSize: 14
         font.italic: true
         color: Theme.colorOnSurfaceVariant
         anchors.centerIn: parent
+    }
+
+    Flickable {
+        anchors.fill: parent
+        anchors.margins: 10
+        visible: errorMessage !== ""
+        contentWidth: width
+        contentHeight: errorText.implicitHeight
+        clip: true
+        
+        Text {
+            id: errorText
+            width: parent.width
+            text: errorMessage
+            font.pixelSize: 12
+            font.family: "Inter"
+            color: Theme.colorOnBackground
+            wrapMode: Text.WrapAnywhere
+            horizontalAlignment: Text.AlignHCenter
+        }
     }
 
     section.property: "sectionTitle"
