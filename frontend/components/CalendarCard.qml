@@ -4,8 +4,24 @@ Rectangle {
     property var eventData: null
     
     height: 65
-    color: Qt.rgba(255/255, 255/255, 255/255, 0.04)
+    color: cardMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.09) : Qt.rgba(255/255, 255/255, 255/255, 0.04)
     radius: 12
+    
+    Behavior on color { ColorAnimation { duration: 150 } }
+
+    MouseArea {
+        id: cardMouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor // Changes cursor to a pointer
+        
+        onClicked: {
+            if (eventData && eventData.link) {
+                console.log("Opening link: " + eventData.link);
+                Qt.openUrlExternally(eventData.link);
+            }
+        }
+    }
     
     Row {
         anchors.fill: parent
