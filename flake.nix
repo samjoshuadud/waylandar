@@ -13,7 +13,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          ags
+          quickshell
           uv
           python311
         ];
@@ -21,7 +21,7 @@
         shellHook = ''
           echo "hypr-gcal development environment loaded!"
           echo "Run 'uv run backend/fetch_calendar.py' to test the backend."
-          echo "Run 'ags -b hypr-gcal -c frontend/main.ts' to test the UI."
+          echo "Run 'quickshell -c frontend/shell.qml' to test the UI."
         '';
       };
     };
