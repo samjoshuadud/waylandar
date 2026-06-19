@@ -38,8 +38,8 @@ ShellRoot {
                             parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
                         }
                         
-                        // Add a flag so we don't spam notifications
-                        parsed[i].notified = false;
+                        // Array to track which specific reminders have already fired
+                        parsed[i].notified_for = [];
                     }
                     
                     calendarEvents = parsed;
@@ -168,13 +168,12 @@ ShellRoot {
                         for (let i = 0; i < calendarEvents.length; i++) {
                             let event = calendarEvents[i];
                             let eventStart = new Date(event.start);
-                            
                             let diffMins = Math.floor((eventStart.getTime() - now.getTime()) / 60000);
                             
-                            if (diffMins === 10 && !event.notified) {
+                            if (event.reminders && event.reminders.includes(diffMins) && !event.notified_for.includes(diffMins)) {
                                 let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), "h:mm AP");
-                                notifyProcess.sendNotification("Upcoming: " + event.title, "Starts at " + timeStr);
-                                event.notified = true; // Mark as notified so we don't spam
+                                notifyProcess.sendNotification("󰃭 " + event.title, "Starts in " + diffMins + " minutes at " + timeStr);
+                                event.notified_for.push(diffMins); // Mark this specific reminder as fired
                             }
                         }
 

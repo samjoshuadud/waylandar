@@ -56,11 +56,21 @@ def get_upcoming_events(creds):
         start = event['start'].get('dateTime', event['start'].get('date'))
         end = event['end'].get('dateTime', event['end'].get('date'))
         
+        reminders_list = []
+        reminders = event.get('reminders', {})
+        if reminders.get('useDefault'):
+            reminders_list.append(10) # Google's standard default
+        else:
+            for override in reminders.get('overrides', []):
+                if override.get('method') == 'popup':
+                    reminders_list.append(override.get('minutes', 10))
+        
         output.append({
             "title": event.get('summary', 'Busy'),
             "start": start,
             "end": end,
-            "link": event.get('htmlLink', '')
+            "link": event.get('htmlLink', ''),
+            "reminders": reminders_list
         })
         
     return output
