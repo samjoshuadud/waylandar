@@ -37,6 +37,9 @@ ShellRoot {
                         } else {
                             parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
                         }
+                        
+                        // Add a flag so we don't spam notifications
+                        parsed[i].notified = false;
                     }
                     
                     calendarEvents = parsed;
@@ -44,6 +47,17 @@ ShellRoot {
                     console.log("Failed to parse JSON.");
                 }
             }
+        }
+    }
+
+    // Silent background process to trigger system notifications!
+    Process {
+        id: notifyProcess
+        command: []
+        
+        function sendNotification(title, body) {
+            command = ["notify-send", "-a", "Waylandar", "-i", "calendar", title, body];
+            running = true;
         }
     }
 
@@ -150,6 +164,20 @@ ShellRoot {
                     running: true
                     repeat: true
                     onTriggered: {
+                        let now = new Date();
+                        for (let i = 0; i < calendarEvents.length; i++) {
+                            let event = calendarEvents[i];
+                            let eventStart = new Date(event.start);
+                            
+                            let diffMins = Math.floor((eventStart.getTime() - now.getTime()) / 60000);
+                            
+                            if (diffMins === 10 && !event.notified) {
+                                let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), "h:mm AP");
+                                notifyProcess.sendNotification("Upcoming: " + event.title, "Starts at " + timeStr);
+                                event.notified = true; // Mark as notified so we don't spam
+                            }
+                        }
+
                         if (minutesUntilSync > 0) {
                             minutesUntilSync--;
                         }
