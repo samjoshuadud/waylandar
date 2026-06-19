@@ -36,6 +36,9 @@ ShellRoot {
     property var activeEventDays: ({})
     property var monthDays: []
     property string currentMonthStr: ""
+    
+    // Tracks when the python script is pulling data
+    property bool isFetching: true
 
     // Generates the 42 cells for the visual calendar grid
     function updateMonthGrid() {
@@ -64,8 +67,11 @@ ShellRoot {
         }
         monthDays = daysArray;
         
-        // Clear selection when changing months
+        // Clear selection when changing months!
         selectedDateStr = "";
+        
+        // Trigger loading state
+        isFetching = true;
     }
 
     Component.onCompleted: updateMonthGrid()
@@ -76,7 +82,7 @@ ShellRoot {
         id: pythonScript
         workingDirectory: "/home/punisher/Documents/waylandar/backend"
         // Pass the year and month down to python!
-        command: ["uv", "run", "fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString()]
+        command: [".venv/bin/python", "fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString()]
         running: true
         
         stdout: StdioCollector {
@@ -109,8 +115,12 @@ ShellRoot {
                     
                     allEvents = parsed;
                     activeEventDays = active;
+                    
+                    // Finished loading!
+                    isFetching = false;
                 } catch(e) {
                     console.log("Failed to parse JSON");
+                    isFetching = false;
                 }
             }
         }
@@ -128,7 +138,7 @@ ShellRoot {
             right: true
         }
         
-        // darkens the entire screen behind the dashboard
+        // A fully transparent window layer so Hyprland accepts the overlay
         color: "transparent"
 
         // clicking the background closes the overlay
@@ -145,6 +155,7 @@ ShellRoot {
 
         // the main centered dashboard
         Rectangle {
+            // Reverted back to the stable fixed sizing
             width: 1000
             height: 700
             anchors.centerIn: parent
@@ -152,12 +163,13 @@ ShellRoot {
             radius: 20
             border.color: Qt.rgba(255/255, 255/255, 255/255, 0.1)
             border.width: 1
+            clip: true
 
             // catch clicks so they dont pass through to the background and close the window
             MouseArea {
                 anchors.fill: parent
             }
-
+            
             Row {
                 anchors.fill: parent
                 anchors.margins: 30
@@ -240,7 +252,7 @@ ShellRoot {
                             }
                         }
                         
-                        // The actual 7x6 month grid!
+                        // The actual 7x6 month grid
                         GridView {
                             id: calGrid
                             width: parent.width
@@ -248,16 +260,21 @@ ShellRoot {
                             cellWidth: width / 7
                             cellHeight: height / 6
                             model: monthDays
-                            interactive: false // Lock scrolling so it stays perfectly shaped
+                            interactive: false
+                            
+                            // Dim the grid when fetching
+                            opacity: isFetching ? 0.3 : 1.0
+                            Behavior on opacity { NumberAnimation { duration: 300 } }
                             
                             delegate: Rectangle {
                                 width: calGrid.cellWidth - 10
                                 height: calGrid.cellHeight - 10
-                                color: modelData.isCurrentMonth ? Qt.rgba(255/255, 255/255, 255/255, 0.05) : "transparent"
+                                
+                                color: modelData.isCurrentMonth ? Qt.rgba(255/255, 255/255, 255/255, 0.12) : Qt.rgba(255/255, 255/255, 255/255, 0.03)
                                 radius: 12
                                 
-                                // Dim all unselected days to make the clicked one stand out!
-                                opacity: selectedDateStr === "" || selectedDateStr === modelData.dateStr ? 1.0 : 0.3
+                                // Dim all unselected days, but less aggressively (from 0.3 up to 0.5)
+                                opacity: selectedDateStr === "" || selectedDateStr === modelData.dateStr ? 1.0 : 0.5
                                 Behavior on opacity { NumberAnimation { duration: 200 } }
                                 
                                 border.color: modelData.dateStr === new Date().toDateString() ? "#f38ba8" : "transparent"
@@ -269,7 +286,8 @@ ShellRoot {
                                     font.pixelSize: 18
                                     font.family: "Inter"
                                     font.bold: modelData.dateStr === new Date().toDateString()
-                                    color: modelData.isCurrentMonth ? "#cdd6f4" : "#45475a"
+                                    // Text color is more solid now
+                                    color: modelData.isCurrentMonth ? "#cdd6f4" : "#6c7086"
                                 }
                                 
                                 Rectangle {
@@ -280,19 +298,46 @@ ShellRoot {
                                     visible: activeEventDays[modelData.dateStr] === true
                                 }
                                 
-                                // Click to select/unselect the day
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (selectedDateStr === modelData.dateStr) {
-                                            selectedDateStr = ""; // unpress
+                                            selectedDateStr = ""; 
                                         } else {
-                                            selectedDateStr = modelData.dateStr; // press
+                                            selectedDateStr = modelData.dateStr; 
                                         }
                                     }
                                 }
                             }
+                        }
+                        
+                    }
+                    
+                    // Custom Sleek Loading Spinner for Left Pane
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 32
+                        height: 32
+                        color: "transparent"
+                        radius: 16
+                        border.color: "#89b4fa"
+                        border.width: 3
+                        visible: opacity > 0
+                        opacity: isFetching ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+                        Rectangle {
+                            width: 16; height: 16; 
+                            color: Qt.rgba(5/255, 5/255, 12/255, 1)
+                            anchors.top: parent.top; anchors.right: parent.right
+                        }
+
+                        RotationAnimation on rotation {
+                            loops: Animation.Infinite
+                            from: 0; to: 360
+                            duration: 800
+                            running: isFetching
                         }
                     }
                 }
@@ -324,9 +369,42 @@ ShellRoot {
                         
                         // Re-using our modular widget list directly in the dashboard
                         Components.CalendarList {
+                            id: rightAgendaList
                             width: parent.width
                             height: parent.height - 44
                             events: displayedEvents
+                            
+                            // Dim the agenda list when fetching
+                            opacity: isFetching ? 0.3 : 1.0
+                            Behavior on opacity { NumberAnimation { duration: 300 } }
+                        }
+                        
+                    }
+                    
+                    // Custom Sleek Loading Spinner for Right Pane
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 32
+                        height: 32
+                        color: "transparent"
+                        radius: 16
+                        border.color: "#89b4fa"
+                        border.width: 3
+                        visible: opacity > 0
+                        opacity: isFetching ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 300 } }
+
+                        Rectangle {
+                            width: 16; height: 16; 
+                            color: Qt.rgba(5/255, 5/255, 12/255, 1)
+                            anchors.top: parent.top; anchors.right: parent.right
+                        }
+
+                        RotationAnimation on rotation {
+                            loops: Animation.Infinite
+                            from: 0; to: 360
+                            duration: 800
+                            running: isFetching
                         }
                     }
                 }

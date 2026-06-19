@@ -11,7 +11,7 @@ ShellRoot {
     Process {
         id: pythonScript
         workingDirectory: "/home/punisher/Documents/waylandar/backend"
-        command: ["uv", "run", "fetch_calendar.py"]
+        command: [".venv/bin/python", "fetch_calendar.py"]
         running: true
         
         stdout: StdioCollector {
@@ -81,11 +81,11 @@ ShellRoot {
             right: 20
         }
         
-        width: 420
-        height: Math.min(800, 100 + (calendarEvents.length * 75))
+        implicitWidth: 420
+        implicitHeight: Math.min(800, 100 + (calendarEvents.length * 75))
         color: "transparent"
         
-        Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
         
         // The Main Background
         Rectangle {
