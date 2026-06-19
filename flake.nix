@@ -55,6 +55,25 @@
     {
       packages.${system}.default = waylandarPkg;
 
+      apps.${system} = {
+        waylandar-widget = {
+          type = "app";
+          program = "${waylandarPkg}/bin/waylandar-widget";
+        };
+        waylandar-dashboard = {
+          type = "app";
+          program = "${waylandarPkg}/bin/waylandar-dashboard";
+        };
+        waylandar-auth = {
+          type = "app";
+          program = "${waylandarPkg}/bin/waylandar-auth";
+        };
+        default = {
+          type = "app";
+          program = "${waylandarPkg}/bin/waylandar-widget";
+        };
+      };
+
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [
           pkgs.quickshell
