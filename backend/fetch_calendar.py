@@ -35,17 +35,31 @@ def authenticate():
 
 def get_upcoming_events(creds):
     from googleapiclient.discovery import build
+    import sys
+    import calendar
     import datetime
-    
+
     service = build('calendar', 'v3', credentials=creds)
 
-    # Get the first day of the current month
-    now = datetime.datetime.utcnow()
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat() + 'Z'
+    if len(sys.argv) == 3:
+        year = int(sys.argv[1])
+        month = int(sys.argv[2])
+        start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = datetime.datetime(year, month, last_day, 23, 59, 59, tzinfo=datetime.timezone.utc)
+    else:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_day = calendar.monthrange(now.year, now.month)[1]
+        end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
+    
+    timeMin = start_date.isoformat()
+    timeMax = end_date.isoformat()
     
     events_result = service.events().list(
         calendarId='primary', 
-        timeMin=start_of_month,
+        timeMin=timeMin,
+        timeMax=timeMax,
         maxResults=250, 
         singleEvents=True,
         orderBy='startTime'

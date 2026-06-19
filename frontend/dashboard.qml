@@ -8,16 +8,23 @@ ShellRoot {
     property var allEvents: []
     property string selectedDateStr: ""
     
+    property int currentViewYear: new Date().getFullYear()
+    property int currentViewMonth: new Date().getMonth()
+    
     // Dynamically computes what shows up in the right pane
     property var displayedEvents: {
         if (selectedDateStr === "") {
-            // Upcoming events only
             let now = new Date();
-            let todayStr = now.toDateString();
-            return allEvents.filter(function(e) {
-                let d = new Date(e.start);
-                return d >= now || (e.end && new Date(e.end) >= now) || d.toDateString() === todayStr;
-            });
+            // If viewing the CURRENT month, hide past events
+            if (currentViewYear === now.getFullYear() && currentViewMonth === now.getMonth()) {
+                let todayStr = now.toDateString();
+                return allEvents.filter(function(e) {
+                    let d = new Date(e.start);
+                    return d >= now || (e.end && new Date(e.end) >= now) || d.toDateString() === todayStr;
+                });
+            } else {
+                return allEvents;
+            }
         } else {
             // Filtered: Exact selected date 
             return allEvents.filter(function(e) {
@@ -30,39 +37,46 @@ ShellRoot {
     property var monthDays: []
     property string currentMonthStr: ""
 
-    // Generates the 42 cells for a visual calendar grid
-    Component.onCompleted: {
-        let now = new Date();
-        let year = now.getFullYear();
-        let month = now.getMonth();
+    // Generates the 42 cells for the visual calendar grid
+    function updateMonthGrid() {
+        let year = currentViewYear;
+        let month = currentViewMonth;
         
-        currentMonthStr = now.toLocaleDateString(Qt.locale("en_US"), "MMMM yyyy");
+        let d = new Date(year, month, 1);
+        currentMonthStr = d.toLocaleDateString(Qt.locale("en_US"), "MMMM yyyy");
         
-        let firstDay = new Date(year, month, 1);
         let lastDay = new Date(year, month + 1, 0);
-        let startOffset = firstDay.getDay(); 
+        let startOffset = d.getDay(); 
         
         let daysArray = [];
         for (let i = startOffset - 1; i >= 0; i--) {
-            let d = new Date(year, month, -i);
-            daysArray.push({ dayNum: d.getDate(), isCurrentMonth: false, dateStr: d.toDateString() });
+            let pd = new Date(year, month, -i);
+            daysArray.push({ dayNum: pd.getDate(), isCurrentMonth: false, dateStr: pd.toDateString() });
         }
         for (let i = 1; i <= lastDay.getDate(); i++) {
-            let d = new Date(year, month, i);
-            daysArray.push({ dayNum: i, isCurrentMonth: true, dateStr: d.toDateString() });
+            let cd = new Date(year, month, i);
+            daysArray.push({ dayNum: i, isCurrentMonth: true, dateStr: cd.toDateString() });
         }
         let remaining = 42 - daysArray.length;
         for (let i = 1; i <= remaining; i++) {
-            let d = new Date(year, month + 1, i);
-            daysArray.push({ dayNum: i, isCurrentMonth: false, dateStr: d.toDateString() });
+            let nd = new Date(year, month + 1, i);
+            daysArray.push({ dayNum: i, isCurrentMonth: false, dateStr: nd.toDateString() });
         }
         monthDays = daysArray;
+        
+        // Clear selection when changing months
+        selectedDateStr = "";
     }
+
+    Component.onCompleted: updateMonthGrid()
+    onCurrentViewMonthChanged: updateMonthGrid()
+    onCurrentViewYearChanged: updateMonthGrid()
 
     Process {
         id: pythonScript
         workingDirectory: "/home/punisher/Documents/waylandar/backend"
-        command: ["uv", "run", "fetch_calendar.py"]
+        // Pass the year and month down to python!
+        command: ["uv", "run", "fetch_calendar.py", currentViewYear.toString(), (currentViewMonth + 1).toString()]
         running: true
         
         stdout: StdioCollector {
@@ -159,12 +173,54 @@ ShellRoot {
                         anchors.margins: 20
                         spacing: 20
                         
-                        Text {
-                            text: currentMonthStr // e.g. "June 2026"
-                            font.pixelSize: 32
-                            font.bold: true
-                            font.family: "Inter"
-                            color: "#cdd6f4"
+                        Row {
+                            spacing: 20
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            
+                            // Previous Month Button
+                            Rectangle {
+                                width: 32; height: 32; radius: 16
+                                color: prevMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.1) : "transparent"
+                                Text { text: "◀"; anchors.centerIn: parent; color: "#89b4fa"; font.pixelSize: 14 }
+                                MouseArea {
+                                    id: prevMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        currentViewMonth--;
+                                        if (currentViewMonth < 0) { currentViewMonth = 11; currentViewYear--; }
+                                        pythonScript.running = true;
+                                    }
+                                }
+                            }
+                            
+                            Text {
+                                text: currentMonthStr // e.g. "June 2026"
+                                font.pixelSize: 28
+                                font.bold: true
+                                font.family: "Inter"
+                                color: "#cdd6f4"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            
+                            // Next Month Button
+                            Rectangle {
+                                width: 32; height: 32; radius: 16
+                                color: nextMouseArea.containsMouse ? Qt.rgba(255/255, 255/255, 255/255, 0.1) : "transparent"
+                                Text { text: "▶"; anchors.centerIn: parent; color: "#89b4fa"; font.pixelSize: 14 }
+                                MouseArea {
+                                    id: nextMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        currentViewMonth++;
+                                        if (currentViewMonth > 11) { currentViewMonth = 0; currentViewYear++; }
+                                        pythonScript.running = true;
+                                    }
+                                }
+                            }
                         }
                         
                         Row {
