@@ -39,12 +39,14 @@ def get_upcoming_events(creds):
     
     service = build('calendar', 'v3', credentials=creds)
 
-    now = datetime.datetime.utcnow().isoformat() + 'Z'  
+    # Get the first day of the current month
+    now = datetime.datetime.utcnow()
+    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat() + 'Z'
     
     events_result = service.events().list(
         calendarId='primary', 
-        timeMin=now,
-        maxResults=10, 
+        timeMin=start_of_month,
+        maxResults=250, 
         singleEvents=True,
         orderBy='startTime'
     ).execute()
@@ -56,6 +58,7 @@ def get_upcoming_events(creds):
         start = event['start'].get('dateTime', event['start'].get('date'))
         end = event['end'].get('dateTime', event['end'].get('date'))
         
+        # Extract the user's custom reminders!
         reminders_list = []
         reminders = event.get('reminders', {})
         if reminders.get('useDefault'):
@@ -67,6 +70,7 @@ def get_upcoming_events(creds):
         
         output.append({
             "title": event.get('summary', 'Busy'),
+            "description": event.get('description', ''), # ADDED FULL DESCRIPTION!
             "start": start,
             "end": end,
             "link": event.get('htmlLink', ''),

@@ -21,7 +21,8 @@
         shellHook = ''
           echo "hypr-gcal development environment loaded!"
           echo "Run 'uv run backend/fetch_calendar.py' to test the backend."
-          echo "Run 'quickshell -c frontend/shell.qml' to test the UI."
+          echo "Run 'quickshell -p frontend/widget.qml' for the desktop widget."
+          echo "Run 'quickshell -p frontend/dashboard.qml' for the full dashboard overlay."
         '';
       };
     };

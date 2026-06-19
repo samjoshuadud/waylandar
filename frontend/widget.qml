@@ -26,8 +26,15 @@ ShellRoot {
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     let tomorrowStr = tomorrow.toDateString();
                     
+                    let filteredEvents = [];
                     for (let i = 0; i < parsed.length; i++) {
                         let d = new Date(parsed[i].start);
+                        
+                        // The backend fetches the whole month, but the widget only shows UPCOMING events!
+                        if (d < now && parsed[i].end && new Date(parsed[i].end) < now) {
+                            continue;
+                        }
+                        
                         let dStr = d.toDateString();
                         
                         if (dStr === todayStr) {
@@ -38,11 +45,11 @@ ShellRoot {
                             parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
                         }
                         
-                        // Array to track which specific reminders have already fired
                         parsed[i].notified_for = [];
+                        filteredEvents.push(parsed[i]);
                     }
                     
-                    calendarEvents = parsed;
+                    calendarEvents = filteredEvents;
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }
