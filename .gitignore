@@ -1,3 +1,4 @@
 credentials.json
 token.json
 result
+.env
