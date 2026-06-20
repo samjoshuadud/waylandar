@@ -11,7 +11,7 @@ ShellRoot {
 
     Process {
         id: pythonScript
-        command: ["waylandar-auth", "--background"]
+        command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py --background; elif command -v waylandar-auth >/dev/null 2>&1; then waylandar-auth --background; else echo '{\"error\": \"Backend not found\"}'; fi"]
         running: true
         
         stdout: StdioCollector {

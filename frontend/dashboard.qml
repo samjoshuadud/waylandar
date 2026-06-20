@@ -82,7 +82,7 @@ ShellRoot {
     Process {
         id: pythonScript
         // Pass the year and month down to python!
-        command: ["waylandar-auth", currentViewYear.toString(), (currentViewMonth + 1).toString(), "--background"]
+        command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py \"$1\" \"$2\" --background; elif command -v waylandar-auth >/dev/null 2>&1; then waylandar-auth \"$1\" \"$2\" --background; else echo '{\"error\": \"Backend not found\"}'; fi", "waylandar-auth", currentViewYear.toString(), (currentViewMonth + 1).toString()]
         running: true
         
         stdout: StdioCollector {
