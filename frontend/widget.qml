@@ -5,29 +5,90 @@ import Quickshell.Wayland
 import "components" as Components
 
 ShellRoot {
-    property var calendarEvents: []
-    property int minutesUntilSync: 60
-    property int calendarCount: 0
-    property string authError: ""
-
-
-    property var selectedCalendarIds: ({})
-
-    Process {
-        id: loadSelectedCals
-        command: ["sh", "-c", "cat ~/.cache/waylandar/selected_cals.json 2>/dev/null || echo ''"]
-        running: true
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                if (text.trim() !== "") {
-                    try {
-                        selectedCalendarIds = JSON.parse(text);
-                    } catch (e) {}
-                }
+property var allRawEvents: []
+    property var allRawCalendars: []
+    
+    property int calendarCount: {
+        let count = 0;
+        if (Object.keys(selectedCalendarIds).length > 0) {
+            for (let i=0; i<allRawCalendars.length; i++) {
+                if (selectedCalendarIds[allRawCalendars[i].id]) count++;
+            }
+        } else {
+            for (let i=0; i<allRawCalendars.length; i++) {
+                if (allRawCalendars[i].selected) count++;
             }
         }
+        return count > 0 ? count : allRawCalendars.length;
     }
+
+    property var calendarEvents: {
+        let filtered = [];
+        let now = new Date();
+        let todayStr = now.toDateString();
+        let tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        let tomorrowStr = tomorrow.toDateString();
+
+        for (let i = 0; i < allRawEvents.length; i++) {
+            let ev = Object.assign({}, allRawEvents[i]); // copy to avoid mutation sharing issues
+            
+            if (ev.calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[ev.calendar_id]) {
+                continue;
+            }
+            
+            let isAllDay = ev.start.length === 10;
+            let d = new Date(ev.start);
+            
+            if (isAllDay) {
+                let parts = ev.start.split('-');
+                d = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+            }
+            
+            let endD = ev.end ? new Date(ev.end) : d;
+            if (ev.end && ev.end.length === 10) {
+                let parts = ev.end.split('-');
+                endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+            }
+            
+            if (d < now && endD < now) {
+                continue;
+            }
+            
+            let dStr = d.toDateString();
+            if (dStr === todayStr) {
+                ev.sectionTitle = "Today";
+            } else if (dStr === tomorrowStr) {
+                ev.sectionTitle = "Tomorrow";
+            } else {
+                ev.sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
+            }
+            
+            filtered.push(ev);
+        }
+        return filtered;
+    }
+
+    property string authError: ""
+    property var selectedCalendarIds: ({})
+    property int minutesUntilSync: 60
+
+    FileView {
+    id: selectedCalsFile
+    path: Quickshell.env("HOME") + "/.cache/waylandar/selected_cals.json"
+    watchChanges: true
+    
+    onFileChanged: reload()
+    
+    onLoaded: {
+        let fileContent = text();
+        if (fileContent.trim() !== "") {
+            try {
+                selectedCalendarIds = JSON.parse(fileContent);
+            } catch(e) {}
+        }
+    }
+}
 
     Process {
 
@@ -40,79 +101,16 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsedData = JSON.parse(text);
-                    let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
-                    let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    let count = 0;
-                    if (Object.keys(selectedCalendarIds).length > 0) {
-                        for (let i=0; i<calendars.length; i++) {
-                            if (selectedCalendarIds[calendars[i].id]) count++;
-                        }
-                    } else {
-                        for (let i=0; i<calendars.length; i++) {
-                            if (calendars[i].selected) count++;
-                        }
-                    }
-                    calendarCount = count > 0 ? count : calendars.length;
-                    
                     if (parsedData.error) {
                         authError = parsedData.error;
-                        calendarEvents = [];
-                        calendarCount = 0;
+                        allRawEvents = [];
+                        allRawCalendars = [];
                         return;
                     }
                     
                     authError = "";
-                    let now = new Date();
-                    let todayStr = now.toDateString();
-                    
-                    let tomorrow = new Date(now);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    let tomorrowStr = tomorrow.toDateString();
-                    
-                    let filteredEvents = [];
-                    for (let i = 0; i < parsed.length; i++) {
-                        let isAllDay = parsed[i].start.length === 10;
-                        let d = new Date(parsed[i].start);
-                        
-                        // Fix JS UTC-parsing bug: YYYY-MM-DD parses as UTC
-                        if (isAllDay) {
-                            let parts = parsed[i].start.split('-');
-                            d = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
-                        }
-                        
-                        let endD = parsed[i].end ? new Date(parsed[i].end) : d;
-                        if (parsed[i].end && parsed[i].end.length === 10) {
-                            let parts = parsed[i].end.split('-');
-                            endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
-                        }
-                        
-
-                        // Filter out unselected calendars
-                        if (parsed[i].calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[parsed[i].calendar_id]) {
-                            continue;
-                        }
-
-                        // The backend fetches the whole month, but the widget only shows UPCOMING events!
-
-                        if (d < now && endD < now) {
-                            continue;
-                        }
-                        
-                        let dStr = d.toDateString();
-                        
-                        if (dStr === todayStr) {
-                            parsed[i].sectionTitle = "Today";
-                        } else if (dStr === tomorrowStr) {
-                            parsed[i].sectionTitle = "Tomorrow";
-                        } else {
-                            parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
-                        }
-                        
-                        parsed[i].notified_for = [];
-                        filteredEvents.push(parsed[i]);
-                    }
-                    
-                    calendarEvents = filteredEvents;
+                    allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+                    allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }
