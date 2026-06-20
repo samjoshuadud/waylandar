@@ -72,15 +72,50 @@ def fetch(year=None, month=None):
 
     calendars = principal.calendars()
     if not calendars:
-        return []
+        return {"events": [], "calendars": []}
     
-    # Phase 2: only fetching from the first calendar for now
-    primary_cal = calendars[0]
-    results = primary_cal.date_search(start=start_date, end=end_date, expand=False)
+    all_events = []
+    all_cals_meta = []
     
-    return parse_caldav_events(results, start_date, end_date, nc_url=url)
+    # fallback colors if no provided colors from nextcloud
+    fallback_colors = ["#4285F4", "#0F9D58", "#F4B400", "#DB4437", "#673AB7", "#00BCD4", "#FF9800", "#9C27B0"]
+    
+    for i, cal in enumerate(calendars):
+        # meta data extrac
+        cal_id = str(cal.url)
+        cal_name = cal.name if hasattr(cal, 'name') and cal.name else f"Calendar {i+1}"
+        
+        cal_color = fallback_colors[i % len(fallback_colors)]
+        try:
+            props = cal.get_properties(['{http://apple.com/ns/ical/}calendar-color'])
+            if props and '{http://apple.com/ns/ical/}calendar-color' in props:
+                cal_color = props['{http://apple.com/ns/ical/}calendar-color']
+        except Exception:
+            pass
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url=""):
+        all_cals_meta.append({
+            "id": cal_id,
+            "name": cal_name,
+            "color": cal_color,
+            "selected": True
+        })
+        
+        try:
+            results = cal.date_search(start=start_date, end=end_date, expand=False)
+            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id)
+            all_events.extend(cal_events)
+        except Exception as e:
+            # Skip calendars that fail or don't support date_search (like tasks) but idk man
+            continue
+    
+    all_events.sort(key=lambda x: x["start"])
+    
+    return {
+        "events": all_events,
+        "calendars": all_cals_meta
+    }
+
+def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id=""):
     output = []
     master_cal = icalendar.Calendar()
     
@@ -165,9 +200,8 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             "start": start_iso,
             "end": end_iso,
             "link": url,
-            "reminders": sorted(reminders_list)
+            "reminders": sorted(reminders_list),
+            "calendar_id": cal_id
         })
         
-    # Sort output by start time
-    output.sort(key=lambda x: x["start"])
     return output
