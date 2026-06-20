@@ -41,7 +41,8 @@ def authenticate():
                 exit(1)
 
             if '--background' in sys.argv:
-                print(json.dumps({"error": "Google Auth Expired.\nPlease run this in your terminal:\n\nwaylandar-auth"}))
+                error_msg = "Google Auth Required/Expired.\nPlease run this in your terminal:\n\nwaylandar-auth\n(or 'uv run python fetch_calendar.py' if installed manually)"
+                print(json.dumps({"error": error_msg}))
                 exit(1)
 
             flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
