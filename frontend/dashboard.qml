@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import "components" as Components
 
 ShellRoot {
+    id: shellRoot
     property var allEvents: []
     property string selectedDateStr: ""
     
@@ -271,18 +272,18 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                     width: parent.width * 0.15
                     height: parent.height
                     
-                    availableCalendars: dashboardWindow.parent.availableCalendars
-                    selectedCalendarIds: dashboardWindow.parent.selectedCalendarIds
-                    isFetching: dashboardWindow.parent.isFetching
+                    availableCalendars: shellRoot.availableCalendars
+                    selectedCalendarIds: shellRoot.selectedCalendarIds
+                    isFetching: shellRoot.isFetching
                     
                     onToggleCalendar: function(calendarId) {
-                        let sel = Object.assign({}, dashboardWindow.parent.selectedCalendarIds);
+                        let sel = Object.assign({}, shellRoot.selectedCalendarIds);
                         if (sel[calendarId]) {
                             delete sel[calendarId];
                         } else {
                             sel[calendarId] = true;
                         }
-                        dashboardWindow.parent.selectedCalendarIds = sel;
+                        shellRoot.selectedCalendarIds = sel;
                         
                         saveSelectedCals.payload = JSON.stringify(sel);
                         saveSelectedCals.running = true;
