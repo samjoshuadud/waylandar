@@ -11,14 +11,19 @@ ShellRoot {
     property int currentViewYear: new Date().getFullYear()
     property int currentViewMonth: new Date().getMonth()
     
+property var availableCalendars: []
+    property var selectedCalendarIds: ({})
+    
     // Dynamically computes what shows up in the right pane
     property var displayedEvents: {
+        let evs = allEvents.filter(e => !e.calendar_id || selectedCalendarIds[e.calendar_id] === true);
+        
         if (selectedDateStr === "") {
             let now = new Date();
             // If viewing the CURRENT month, hide past events
             if (currentViewYear === now.getFullYear() && currentViewMonth === now.getMonth()) {
                 let todayStr = now.toDateString();
-                return allEvents.filter(function(e) {
+                return evs.filter(function(e) {
                     let isAllDay = e.start.length === 10;
                     let d = new Date(e.start);
                     if (isAllDay) {
@@ -35,17 +40,25 @@ ShellRoot {
                     return d >= now || endD >= now || d.toDateString() === todayStr;
                 });
             } else {
-                return allEvents;
+                return evs;
             }
         } else {
             // Filtered: Exact selected date 
-            return allEvents.filter(function(e) {
+            return evs.filter(function(e) {
                 return new Date(e.start).toDateString() === selectedDateStr;
             });
         }
     }
     
-    property var activeEventDays: ({})
+    property var activeEventDays: {
+        let active = {};
+        for (let i = 0; i < allEvents.length; i++) {
+            let e = allEvents[i];
+            if (e.calendar_id && !selectedCalendarIds[e.calendar_id]) continue;
+            active[new Date(e.start).toDateString()] = true;
+        }
+        return active;
+    }
     property var monthDays: []
     property string currentMonthStr: ""
     property string authError: ""
@@ -91,7 +104,31 @@ ShellRoot {
     onCurrentViewMonthChanged: updateMonthGrid()
     onCurrentViewYearChanged: updateMonthGrid()
 
+
     Process {
+        id: loadSelectedCals
+        command: ["sh", "-c", "cat ~/.cache/waylandar/selected_cals.json 2>/dev/null || echo ''"]
+        running: true
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                if (text.trim() !== "") {
+                    try {
+                        selectedCalendarIds = JSON.parse(text);
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    Process {
+        id: saveSelectedCals
+        property string payload: ""
+        command: ["sh", "-c", "echo '" + payload + "' > ~/.cache/waylandar/selected_cals.json"]
+    }
+
+    Process {
+
         id: pythonScript
         // Pass the year and month down to python!
         command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py \"$1\" \"$2\" --background; elif command -v waylandar-auth >/dev/null 2>&1; then waylandar-auth \"$1\" \"$2\" --background; else echo '{\"error\": \"Backend not found\"}'; fi", "waylandar-auth", currentViewYear.toString(), (currentViewMonth + 1).toString()]
@@ -104,16 +141,32 @@ ShellRoot {
                     let parsedData = JSON.parse(text);
                     let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
                     
+let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+                    availableCalendars = calendars;
+                    
+                    if (Object.keys(selectedCalendarIds).length === 0) {
+                        let sel = {};
+                        for (let i=0; i<calendars.length; i++) {
+                            if (calendars[i].selected) {
+                                sel[calendars[i].id] = true;
+                            }
+                        }
+                        if (Object.keys(sel).length === 0) {
+                            for (let i=0; i<calendars.length; i++) {
+                                sel[calendars[i].id] = true;
+                            }
+                        }
+                        selectedCalendarIds = sel;
+                    }
+                    
                     if (parsedData.error) {
                         authError = parsedData.error;
                         allEvents = [];
-                        activeEventDays = {};
                         isFetching = false;
                         return;
                     }
                     
                     authError = "";
-                    let active = {};
                     
                     let now = new Date();
                     let todayStr = now.toDateString();
@@ -125,8 +178,6 @@ ShellRoot {
                         let d = new Date(parsed[i].start);
                         let dStr = d.toDateString();
                         
-                        active[dStr] = true;
-                        
                         if (dStr === todayStr) {
                             parsed[i].sectionTitle = "Today";
                         } else if (dStr === tomorrowStr) {
@@ -137,7 +188,6 @@ ShellRoot {
                     }
                     
                     allEvents = parsed;
-                    activeEventDays = active;
                     
                     // Finished loading!
                     isFetching = false;
@@ -179,7 +229,7 @@ ShellRoot {
         // the main centered dashboard
         Rectangle {
             // Reverted back to the stable fixed sizing
-            width: 1000
+            width: 1250
             height: 700
             anchors.centerIn: parent
             color: Theme.background
@@ -215,9 +265,89 @@ ShellRoot {
                 anchors.margins: 30
                 spacing: 30
 
+
+                // FAR LEFT: Calendars Sidebar
+                Item {
+                    width: parent.width * 0.15
+                    height: parent.height
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 20
+                        spacing: 20
+                        
+                        Text {
+                            text: "Calendars"
+                            font.pixelSize: 24
+                            font.bold: true
+                            font.family: "Inter"
+                            color: Theme.colorOnBackground
+                        }
+                        
+                        ListView {
+                            width: parent.width
+                            height: parent.height - 40
+                            model: availableCalendars
+                            spacing: 12
+                            clip: true
+                            
+                            delegate: Row {
+                                spacing: 10
+                                width: parent.width
+                                
+                                Rectangle {
+                                    width: 18; height: 18; radius: 4
+                                    color: selectedCalendarIds[modelData.id] ? modelData.color : "transparent"
+                                    border.color: modelData.color
+                                    border.width: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        color: Theme.background
+                                        visible: selectedCalendarIds[modelData.id] === true
+                                        font.pixelSize: 12
+                                        font.bold: true
+                                    }
+                                }
+                                
+                                Text {
+                                    text: modelData.name
+                                    font.pixelSize: 13
+                                    font.family: "Inter"
+                                    color: Theme.colorOnBackground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    elide: Text.ElideRight
+                                    width: parent.width - 28
+                                }
+                                
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        let sel = Object.assign({}, selectedCalendarIds);
+                                        if (sel[modelData.id]) {
+                                            delete sel[modelData.id];
+                                        } else {
+                                            sel[modelData.id] = true;
+                                        }
+                                        selectedCalendarIds = sel;
+                                        
+                                        saveSelectedCals.payload = JSON.stringify(sel);
+                                        saveSelectedCals.running = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle { width: 1; height: parent.height; color: Theme.outline }
+
                 // left pane for the visual calendar grid
                 Item {
-                    width: parent.width * 0.6 - 30
+                    width: parent.width * 0.5 - 40
                     height: parent.height
 
                     Column {
@@ -391,7 +521,7 @@ ShellRoot {
 
                 // right pane for the agenda tasks
                 Item {
-                    width: parent.width * 0.4 - 31 
+                    width: parent.width * 0.35 - 31 
                     height: parent.height
 
                     Column {
