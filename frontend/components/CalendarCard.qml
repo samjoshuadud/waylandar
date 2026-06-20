@@ -62,9 +62,36 @@ Rectangle {
             Text {
                 text: {
                     if (!eventData) return "";
-                    var d = new Date(eventData.start);
-                    var loc = Qt.locale("en_US"); 
-                    return d.toLocaleDateString(loc, "ddd MMM d") + " at " + d.toLocaleTimeString(loc, "h:mm AP");
+                    let isAllDay = eventData.start.length === 10;
+                    
+                    let d = new Date(eventData.start);
+                    if (isAllDay) {
+                        let parts = eventData.start.split('-');
+                        d = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+                    }
+                    
+                    let endD = eventData.end ? new Date(eventData.end) : d;
+                    if (eventData.end && eventData.end.length === 10) {
+                        let parts = eventData.end.split('-');
+                        endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+                    }
+
+                    let loc = Qt.locale("en_US"); 
+                    let now = new Date();
+                    
+                    let isOngoing = (d <= now && now <= endD);
+                    let ongoingBadge = isOngoing ? "  🔴 (Ongoing)" : "";
+                    
+                    if (isAllDay) {
+                        return d.toLocaleDateString(loc, "ddd MMM d") + " (All Day)" + ongoingBadge;
+                    }
+                    
+                    let timeRange = d.toLocaleTimeString(loc, "h:mm AP");
+                    if (eventData.end && eventData.end !== eventData.start) {
+                        timeRange += " - " + endD.toLocaleTimeString(loc, "h:mm AP");
+                    }
+                    
+                    return d.toLocaleDateString(loc, "ddd MMM d") + " at " + timeRange + ongoingBadge;
                 }
                 font.pixelSize: 12
                 font.family: "Inter"

@@ -19,8 +19,20 @@ ShellRoot {
             if (currentViewYear === now.getFullYear() && currentViewMonth === now.getMonth()) {
                 let todayStr = now.toDateString();
                 return allEvents.filter(function(e) {
+                    let isAllDay = e.start.length === 10;
                     let d = new Date(e.start);
-                    return d >= now || (e.end && new Date(e.end) >= now) || d.toDateString() === todayStr;
+                    if (isAllDay) {
+                        let parts = e.start.split('-');
+                        d = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+                    }
+                    
+                    let endD = e.end ? new Date(e.end) : d;
+                    if (e.end && e.end.length === 10) {
+                        let parts = e.end.split('-');
+                        endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+                    }
+                    
+                    return d >= now || endD >= now || d.toDateString() === todayStr;
                 });
             } else {
                 return allEvents;

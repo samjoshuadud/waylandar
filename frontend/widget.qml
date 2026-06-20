@@ -36,10 +36,23 @@ ShellRoot {
                     
                     let filteredEvents = [];
                     for (let i = 0; i < parsed.length; i++) {
+                        let isAllDay = parsed[i].start.length === 10;
                         let d = new Date(parsed[i].start);
                         
+                        // Fix JS UTC-parsing bug: YYYY-MM-DD parses as UTC
+                        if (isAllDay) {
+                            let parts = parsed[i].start.split('-');
+                            d = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+                        }
+                        
+                        let endD = parsed[i].end ? new Date(parsed[i].end) : d;
+                        if (parsed[i].end && parsed[i].end.length === 10) {
+                            let parts = parsed[i].end.split('-');
+                            endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+                        }
+                        
                         // The backend fetches the whole month, but the widget only shows UPCOMING events!
-                        if (d < now && parsed[i].end && new Date(parsed[i].end) < now) {
+                        if (d < now && endD < now) {
                             continue;
                         }
                         
