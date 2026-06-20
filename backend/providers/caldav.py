@@ -104,7 +104,7 @@ def fetch(year=None, month=None):
             results = cal.date_search(start=start_date, end=end_date, expand=False)
             cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id)
             all_events.extend(cal_events)
-        except Exception as e:
+        except Exception:
             # Skip calendars that fail or don't support date_search (like tasks) but idk man
             continue
     
