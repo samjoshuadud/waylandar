@@ -307,10 +307,13 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 anchors.margins: 30
                 spacing: 30
 
+                readonly property real overhead: spacing * 4 + 1 * 2
+                readonly property real contentWidth: width - overhead
+
 
                 // FAR LEFT: Calendars Sidebar
                 Components.CalendarSidebar {
-                    width: parent.width * 0.15
+                    width: parent.contentWidth * 0.15
                     height: parent.height
                     
                     availableCalendars: shellRoot.availableCalendars
@@ -336,7 +339,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
                 // left pane for the visual calendar grid
                 Item {
-                    width: parent.width * 0.5 - 40
+                    width: parent.contentWidth * 0.5 - 40
                     height: parent.height
 
                     Column {
@@ -510,7 +513,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
                 // right pane for the agenda tasks
                 Item {
-                    width: parent.width * 0.35 - 31 
+                    width: parent.contentWidth * 0.35 - 31 
                     height: parent.height
 
                     Column {
