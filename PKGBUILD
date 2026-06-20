@@ -1,7 +1,7 @@
 pkgname=waylandar-git
 pkgver=1.0.0
 pkgrel=1
-pkgdesc="A standalone Wayland Google Calendar widget built with Quickshell and Python"
+pkgdesc="A standalone Wayland Calendar widget built with Quickshell and Python (Supports Google & Nextcloud)"
 arch=('any')
 url="https://github.com/samjoshuadud/waylandar" 
 license=('MIT') 
@@ -47,8 +47,9 @@ EOF
 
   cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
 #!/bin/bash
-mkdir -p ~/.config/waylandar/frontend
-ln -sfn /usr/share/waylandar/frontend/* ~/.config/waylandar/frontend/
+mkdir -p ~/.config/waylandar/frontend/components
+ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
+ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
 cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
 chmod 644 ~/.config/waylandar/theme_template.qml
 if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
@@ -60,8 +61,9 @@ EOF
 
   cat > "$pkgdir/usr/bin/waylandar-dashboard" <<EOF
 #!/bin/bash
-mkdir -p ~/.config/waylandar/frontend
-ln -sfn /usr/share/waylandar/frontend/* ~/.config/waylandar/frontend/
+mkdir -p ~/.config/waylandar/frontend/components
+ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
+ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
 cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
 chmod 644 ~/.config/waylandar/theme_template.qml
 if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then

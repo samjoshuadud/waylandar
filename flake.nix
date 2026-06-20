@@ -1,5 +1,5 @@
 {
-  description = "A standalone Wayland Google Calendar widget built with AGS and Python";
+  description = "A standalone Wayland Calendar widget built with Quickshell and Python (Supports Google & Nextcloud)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -44,9 +44,10 @@
 
           # Create a common initialization script
           cat > $out/bin/waylandar-init-theme <<EOF
-          mkdir -p ~/.config/waylandar/frontend
-          # Symlink all read-only frontend files to the writable config directory
-          ln -sfn $out/share/waylandar/frontend/* ~/.config/waylandar/frontend/
+          mkdir -p ~/.config/waylandar/frontend/components
+          # Symlink all read-only frontend files to the writable config directory individually to preserve structure
+          ln -sfn $out/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
+          ln -sfn $out/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
           
           # Copy the template for Matugen to use
           cp $out/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
