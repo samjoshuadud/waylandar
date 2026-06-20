@@ -125,7 +125,7 @@ property var availableCalendars: []
     Process {
         id: saveSelectedCals
         property string payload: ""
-        command: ["sh", "-c", "echo '" + payload + "' > ~/.cache/waylandar/selected_cals.json"]
+        command: ["sh", "-c", "echo \"$1\" > ~/.cache/waylandar/selected_cals.json", "sh", payload]
     }
 
     Process {
