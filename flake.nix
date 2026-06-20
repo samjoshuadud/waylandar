@@ -15,6 +15,8 @@
         google-auth-httplib2
         google-auth-oauthlib
         caldav
+        icalendar
+        recurring-ical-events
       ]);
 
       waylandarPkg = pkgs.stdenv.mkDerivation {

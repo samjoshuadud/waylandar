@@ -2,3 +2,7 @@ credentials.json
 token.json
 result
 .env
+
+__pycache__
+
+test_*.py

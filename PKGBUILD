@@ -12,6 +12,8 @@ depends=(
     'python-google-auth-httplib2'
     'python-google-auth-oauthlib'
     'python-caldav'
+    'python-icalendar'
+    'python-recurring-ical-events'
 )
 makedepends=('git')
 provides=('waylandar')
