@@ -78,11 +78,16 @@ def fetch(year=None, month=None):
     primary_cal = calendars[0]
     results = primary_cal.date_search(start=start_date, end=end_date, expand=False)
     
-    return parse_caldav_events(results, start_date, end_date)
+    return parse_caldav_events(results, start_date, end_date, nc_url=url)
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date):
+def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url=""):
     output = []
     master_cal = icalendar.Calendar()
+    
+    # Generate fallback calendar link from the CalDAV URL
+    fallback_link = ""
+    if nc_url:
+        fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
     
     for ev in caldav_events_or_ics_strings:
         if isinstance(ev, str):
@@ -103,7 +108,11 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date):
     for event in events:
         summary = str(event.get('SUMMARY', 'Busy'))
         description = str(event.get('DESCRIPTION', ''))
+        
+        # Use event URL if exists, otherwise fallback to the Nextcloud Calendar web UI
         url = str(event.get('URL', ''))
+        if not url or url == "None":
+            url = fallback_link
         
         dtstart = event.get('DTSTART')
         dtend = event.get('DTEND')
