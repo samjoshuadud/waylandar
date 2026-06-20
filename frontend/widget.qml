@@ -74,21 +74,37 @@ property var allRawEvents: []
     property int minutesUntilSync: 60
 
     FileView {
-    id: selectedCalsFile
-    path: Quickshell.env("HOME") + "/.cache/waylandar/selected_cals.json"
-    watchChanges: true
-    
-    onFileChanged: reload()
-    
-    onLoaded: {
-        let fileContent = text();
-        if (fileContent.trim() !== "") {
-            try {
-                selectedCalendarIds = JSON.parse(fileContent);
-            } catch(e) {}
+        id: selectedCalsFile
+        path: Quickshell.env("HOME") + "/.cache/waylandar/selected_cals.json"
+        watchChanges: true
+        
+        function syncCals() {
+            let fileContent = selectedCalsFile.text();
+            if (fileContent.trim() !== "") {
+                try {
+                    selectedCalendarIds = JSON.parse(fileContent);
+                } catch(e) {}
+            }
+        }
+        
+        onLoaded: syncCals()
+        onFileChanged: syncCals()
+    }
+
+    FileView {
+        id: configFileWatcher
+        path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
+        watchChanges: true
+        
+        onFileChanged: {
+            // When config changes (e.g. provider is switched), trigger a background sync!
+            if (!pythonScript.running) {
+                minutesUntilSync = 60; // Reset countdown
+                countdownTimer.restart(); 
+                pythonScript.running = true;
+            }
         }
     }
-}
 
     Process {
 
