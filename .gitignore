@@ -3,6 +3,7 @@ token.json
 result
 .env
 
+.direnv/
 __pycache__
 
 
