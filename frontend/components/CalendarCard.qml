@@ -94,6 +94,17 @@ Rectangle {
             spacing: 12
 
             Text {
+                text: {
+                    if (!eventData || !eventData.reminders || eventData.reminders.length === 0) return "🔔 No reminder set.";
+                    return "🔔 Reminder: " + eventData.reminders.join(", ") + " minutes before";
+                }
+                font.pixelSize: 12
+                font.family: "Inter"
+                font.bold: true
+                color: Theme.tertiary
+            }
+
+            Text {
                 text: eventData && eventData.description ? eventData.description : "No additional description."
                 font.pixelSize: 12
                 font.family: "Inter"

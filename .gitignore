@@ -6,3 +6,9 @@ result
 __pycache__
 
 test_*.py
+
+# Arch Linux packaging artifacts
+pkg/
+src/
+waylandar/
+*.pkg.tar.zst
