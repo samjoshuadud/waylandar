@@ -10,7 +10,27 @@ ShellRoot {
     property int calendarCount: 0
     property string authError: ""
 
+
+    property var selectedCalendarIds: ({})
+
     Process {
+        id: loadSelectedCals
+        command: ["sh", "-c", "cat ~/.cache/waylandar/selected_cals.json 2>/dev/null || echo ''"]
+        running: true
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                if (text.trim() !== "") {
+                    try {
+                        selectedCalendarIds = JSON.parse(text);
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    Process {
+
         id: pythonScript
         command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py --background; elif command -v waylandar-auth >/dev/null 2>&1; then waylandar-auth --background; else echo '{\"error\": \"Backend not found\"}'; fi"]
         running: true
@@ -22,7 +42,17 @@ ShellRoot {
                     let parsedData = JSON.parse(text);
                     let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
                     let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    calendarCount = calendars.length;
+                    let count = 0;
+                    if (Object.keys(selectedCalendarIds).length > 0) {
+                        for (let i=0; i<calendars.length; i++) {
+                            if (selectedCalendarIds[calendars[i].id]) count++;
+                        }
+                    } else {
+                        for (let i=0; i<calendars.length; i++) {
+                            if (calendars[i].selected) count++;
+                        }
+                    }
+                    calendarCount = count > 0 ? count : calendars.length;
                     
                     if (parsedData.error) {
                         authError = parsedData.error;
@@ -56,7 +86,14 @@ ShellRoot {
                             endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
                         }
                         
+
+                        // Filter out unselected calendars
+                        if (parsed[i].calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[parsed[i].calendar_id]) {
+                            continue;
+                        }
+
                         // The backend fetches the whole month, but the widget only shows UPCOMING events!
+
                         if (d < now && endD < now) {
                             continue;
                         }
