@@ -1,3 +1,13 @@
 credentials.json
 token.json
 result
+.env
+
+__pycache__
+
+
+# Arch Linux packaging artifacts
+pkg/
+src/
+waylandar/
+*.pkg.tar.zst
