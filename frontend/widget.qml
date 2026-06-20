@@ -31,7 +31,11 @@ property var allRawEvents: []
         let tomorrowStr = tomorrow.toDateString();
 
         for (let i = 0; i < allRawEvents.length; i++) {
+            if (!allRawEvents[i].notified_for) {
+                allRawEvents[i].notified_for = [];
+            }
             let ev = Object.assign({}, allRawEvents[i]); // copy to avoid mutation sharing issues
+            ev.notified_for = allRawEvents[i].notified_for; // Reference the same array so timer mutations persist
             
             if (ev.calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[ev.calendar_id]) {
                 continue;
@@ -97,7 +101,8 @@ property var allRawEvents: []
         watchChanges: true
         
         onFileChanged: {
-            // When config changes (e.g. provider is switched), trigger a background sync!
+            // When config changes,trigger a background sync
+            // when provider change
             if (!pythonScript.running) {
                 minutesUntilSync = 60; // Reset countdown
                 countdownTimer.restart(); 
@@ -134,7 +139,7 @@ property var allRawEvents: []
         }
     }
 
-    // Silent background process to trigger system notifications!
+    // trigger notify-send silently in the bg 
     Process {
         id: notifyProcess
         command: []
