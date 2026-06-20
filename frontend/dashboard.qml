@@ -339,7 +339,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
                 // left pane for the visual calendar grid
                 Item {
-                    width: parent.contentWidth * 0.5 - 40
+                    width: parent.contentWidth * 0.5
                     height: parent.height
 
                     Column {
@@ -513,7 +513,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
                 // right pane for the agenda tasks
                 Item {
-                    width: parent.contentWidth * 0.35 - 31 
+                    width: parent.contentWidth * 0.35
                     height: parent.height
 
                     Column {
