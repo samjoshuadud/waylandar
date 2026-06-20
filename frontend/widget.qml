@@ -7,6 +7,7 @@ import "components" as Components
 ShellRoot {
     property var calendarEvents: []
     property int minutesUntilSync: 60
+    property int calendarCount: 0
     property string authError: ""
 
     Process {
@@ -20,10 +21,13 @@ ShellRoot {
                 try {
                     let parsedData = JSON.parse(text);
                     let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+                    let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+                    calendarCount = calendars.length;
                     
                     if (parsedData.error) {
                         authError = parsedData.error;
                         calendarEvents = [];
+                        calendarCount = 0;
                         return;
                     }
                     
@@ -130,19 +134,30 @@ ShellRoot {
 
                 Item {
                     width: parent.width
-                    height: 24
+                    height: 45
 
-                    Text {
+                    Column {
                         anchors.left: parent.left
                         anchors.right: countdownText.left
                         anchors.rightMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Upcoming Schedule"
-                        font.pixelSize: 18
-                        font.bold: true
-                        font.family: "Inter"
-                        color: Theme.colorOnBackground
-                        elide: Text.ElideRight
+                        spacing: 4
+                        
+                        Text {
+                            text: "Upcoming Schedule"
+                            font.pixelSize: 18
+                            font.bold: true
+                            font.family: "Inter"
+                            color: Theme.colorOnBackground
+                        }
+                        
+                        Text {
+                            text: calendarCount > 0 ? calendarCount + " Active Calendars" : ""
+                            font.pixelSize: 12
+                            font.family: "Inter"
+                            color: Theme.tertiary
+                            visible: calendarCount > 0
+                        }
                     }
 
                     // Countdown Text

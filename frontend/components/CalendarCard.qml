@@ -40,7 +40,7 @@ Rectangle {
             height: 34
             anchors.verticalCenter: parent.verticalCenter
             radius: 2
-            color: Theme.tertiary 
+            color: eventData && eventData.calendar_color ? eventData.calendar_color : Theme.tertiary 
         }
 
         // Text details container
@@ -83,7 +83,7 @@ Rectangle {
                     let ongoingBadge = isOngoing ? "  🔴 (Ongoing)" : "";
                     
                     if (isAllDay) {
-                        return d.toLocaleDateString(loc, "ddd MMM d") + " (All Day)" + ongoingBadge;
+                        return d.toLocaleDateString(loc, "ddd MMM d") + " (All Day) • " + (eventData.calendar_name || "Unknown") + ongoingBadge;
                     }
                     
                     let timeRange = d.toLocaleTimeString(loc, "h:mm AP");
@@ -91,11 +91,13 @@ Rectangle {
                         timeRange += " - " + endD.toLocaleTimeString(loc, "h:mm AP");
                     }
                     
-                    return d.toLocaleDateString(loc, "ddd MMM d") + " at " + timeRange + ongoingBadge;
+                    return d.toLocaleDateString(loc, "ddd MMM d") + " at " + timeRange + " • " + (eventData.calendar_name || "Unknown") + ongoingBadge;
                 }
                 font.pixelSize: 12
                 font.family: "Inter"
                 color: Theme.colorOnSurfaceVariant
+                elide: Text.ElideRight
+                width: parent.width
             }
         }
     }
