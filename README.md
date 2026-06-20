@@ -90,7 +90,7 @@ Waylandar uses OAuth 2.0 and requires your own Google Cloud credentials. One-tim
    waylandar-auth
 
    # Manual / cloned repo
-   cd backend && uv run python fetch_calendar.py
+   cd backend && uv run python sync.py
    ```
    A browser window will open for Google login. After completing it, the token is saved and you won't need to do this again unless it expires.
 

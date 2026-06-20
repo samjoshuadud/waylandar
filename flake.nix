@@ -14,6 +14,7 @@
         google-api-python-client
         google-auth-httplib2
         google-auth-oauthlib
+        caldav
       ]);
 
       waylandarPkg = pkgs.stdenv.mkDerivation {
@@ -32,19 +33,12 @@
           # Wrap the python auth script
           cat > $out/bin/waylandar-auth <<EOF
           #!${pkgs.bash}/bin/bash
-          exec ${pythonEnv}/bin/python $out/share/waylandar/backend/fetch_calendar.py "\$@"
+          exec ${pythonEnv}/bin/python $out/share/waylandar/backend/sync.py "\$@"
           EOF
           chmod +x $out/bin/waylandar-auth
 
           # Move Theme out of frontend so it isn't symlinked as read-only later
           mv $out/share/waylandar/frontend/Theme.qml $out/share/waylandar/fallback_Theme.qml
-          
-          # Wrap the python auth script
-          cat > $out/bin/waylandar-auth <<EOF
-          #!${pkgs.bash}/bin/bash
-          exec ${pythonEnv}/bin/python $out/share/waylandar/backend/fetch_calendar.py "\$@"
-          EOF
-          chmod +x $out/bin/waylandar-auth
 
           # Create a common initialization script
           cat > $out/bin/waylandar-init-theme <<EOF

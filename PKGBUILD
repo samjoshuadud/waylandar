@@ -11,6 +11,7 @@ depends=(
     'python-google-api-python-client'
     'python-google-auth-httplib2'
     'python-google-auth-oauthlib'
+    'python-caldav'
 )
 makedepends=('git')
 provides=('waylandar')
@@ -39,7 +40,7 @@ package() {
   
   cat > "$pkgdir/usr/bin/waylandar-auth" <<EOF
 #!/bin/bash
-exec python /usr/share/waylandar/backend/fetch_calendar.py "\$@"
+exec python /usr/share/waylandar/backend/sync.py "\$@"
 EOF
 
   cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
