@@ -267,79 +267,25 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
 
                 // FAR LEFT: Calendars Sidebar
-                Item {
+                Components.CalendarSidebar {
                     width: parent.width * 0.15
                     height: parent.height
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        spacing: 20
-                        
-                        Text {
-                            text: "Calendars"
-                            font.pixelSize: 24
-                            font.bold: true
-                            font.family: "Inter"
-                            color: Theme.colorOnBackground
+                    
+                    availableCalendars: dashboardWindow.parent.availableCalendars
+                    selectedCalendarIds: dashboardWindow.parent.selectedCalendarIds
+                    isFetching: dashboardWindow.parent.isFetching
+                    
+                    onToggleCalendar: function(calendarId) {
+                        let sel = Object.assign({}, dashboardWindow.parent.selectedCalendarIds);
+                        if (sel[calendarId]) {
+                            delete sel[calendarId];
+                        } else {
+                            sel[calendarId] = true;
                         }
+                        dashboardWindow.parent.selectedCalendarIds = sel;
                         
-                        ListView {
-                            width: parent.width
-                            height: parent.height - 40
-                            model: availableCalendars
-                            spacing: 12
-                            clip: true
-                            
-                            delegate: Row {
-                                spacing: 10
-                                width: parent.width
-                                
-                                Rectangle {
-                                    width: 18; height: 18; radius: 4
-                                    color: selectedCalendarIds[modelData.id] ? modelData.color : "transparent"
-                                    border.color: modelData.color
-                                    border.width: 2
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "✓"
-                                        color: Theme.background
-                                        visible: selectedCalendarIds[modelData.id] === true
-                                        font.pixelSize: 12
-                                        font.bold: true
-                                    }
-                                }
-                                
-                                Text {
-                                    text: modelData.name
-                                    font.pixelSize: 13
-                                    font.family: "Inter"
-                                    color: Theme.colorOnBackground
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    elide: Text.ElideRight
-                                    width: parent.width - 28
-                                }
-                                
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        let sel = Object.assign({}, selectedCalendarIds);
-                                        if (sel[modelData.id]) {
-                                            delete sel[modelData.id];
-                                        } else {
-                                            sel[modelData.id] = true;
-                                        }
-                                        selectedCalendarIds = sel;
-                                        
-                                        saveSelectedCals.payload = JSON.stringify(sel);
-                                        saveSelectedCals.running = true;
-                                    }
-                                }
-                            }
-                        }
+                        saveSelectedCals.payload = JSON.stringify(sel);
+                        saveSelectedCals.running = true;
                     }
                 }
 
