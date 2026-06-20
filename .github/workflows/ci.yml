@@ -12,6 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Check for hardcoded paths cuz im stupd
+        run: |
+          echo "Scanning codebase for hardcoded absolute paths..."
+          if grep -rn "/home/" --include=\*.{py,qml} .; then
+            echo "ERROR: Hardcoded '/home/' paths found! Please use Quickshell.env(\"HOME\") or os.path.expanduser(\"~\") instead."
+            exit 1
+          else
+            echo "No hardcoded paths found."
+          fi
+
       - name: Run Ruff
         uses: astral-sh/ruff-action@v1
 
