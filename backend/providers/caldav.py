@@ -142,6 +142,19 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
                         minutes_before = int(td.total_seconds() / -60)
                         if minutes_before > 0:
                             reminders_list.append(minutes_before)
+                    elif isinstance(td, datetime.datetime):
+                        # Calculate difference from event start time
+                        # Ensure both are offset-aware or offset-naive before subtracting
+                        s_val = start_val
+                        if s_val.tzinfo is not None and td.tzinfo is None:
+                            td = td.replace(tzinfo=datetime.timezone.utc)
+                        elif s_val.tzinfo is None and td.tzinfo is not None:
+                            s_val = s_val.replace(tzinfo=datetime.timezone.utc)
+                            
+                        diff = s_val - td
+                        minutes_before = int(diff.total_seconds() / 60)
+                        if minutes_before > 0:
+                            reminders_list.append(minutes_before)
                             
         if not has_alarm:
             reminders_list.append(10)
