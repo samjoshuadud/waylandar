@@ -25,19 +25,19 @@ Rectangle {
         onClicked: toggleExpand()
     }
     
-    Row {
+    Item {
         id: topRow
         width: parent.width
         height: 55
         anchors.top: parent.top
-        spacing: 15
         
-        Item { width: 1; height: 1 } // Padding
-
         // Left color accent bar
         Rectangle {
+            id: accentBar
             width: 4
             height: 34
+            anchors.left: parent.left
+            anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             radius: 2
             color: eventData && eventData.calendar_color ? eventData.calendar_color : Theme.tertiary 
@@ -46,7 +46,10 @@ Rectangle {
         // Text details container
         Column {
             spacing: 4
-            width: parent.width - 45
+            anchors.left: accentBar.right
+            anchors.leftMargin: 15
+            anchors.right: parent.right
+            anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
 
             Text {
@@ -105,10 +108,11 @@ Rectangle {
     // The expanding details container
     Item {
         id: expandedDetails
-        width: parent.width - 45
         anchors.top: topRow.bottom
         anchors.left: parent.left
         anchors.leftMargin: 35
+        anchors.right: parent.right
+        anchors.rightMargin: 16
         
         // Fades in smoothly as it drops down
         opacity: isExpanded ? 1.0 : 0.0
