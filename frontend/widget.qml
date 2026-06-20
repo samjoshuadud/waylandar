@@ -150,14 +150,27 @@ property var allRawEvents: []
         }
     }
 
-    // trigger notify-send silently in the bg 
     Process {
         id: notifyProcess
+        property var queue: []
         command: []
         
+        onExited: {
+            if (queue.length > 0) {
+                let nextCmd = queue.shift();
+                command = nextCmd;
+                running = true;
+            }
+        }
+        
         function sendNotification(title, body) {
-            command = ["notify-send", "-a", "Waylandar", "-i", "calendar", title, body];
-            running = true;
+            let cmd = ["notify-send", "-a", "Waylandar", "-i", "calendar", title, body];
+            if (running) {
+                queue.push(cmd);
+            } else {
+                command = cmd;
+                running = true;
+            }
         }
     }
 

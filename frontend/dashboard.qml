@@ -156,6 +156,19 @@ property var availableCalendars: []
         command: ["sh", "-c", "mkdir -p ~/.cache/waylandar && echo \"$1\" > ~/.cache/waylandar/selected_cals.json", "sh", payload]
     }
 
+    Timer {
+        id: saveDebounceTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (saveSelectedCals.running) {
+                saveDebounceTimer.start();
+            } else {
+                saveSelectedCals.running = true;
+            }
+        }
+    }
+
     Process {
 
         id: pythonScript
@@ -315,7 +328,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                         shellRoot.selectedCalendarIds = sel;
                         
                         saveSelectedCals.payload = JSON.stringify(sel);
-                        saveSelectedCals.running = true;
+                        saveDebounceTimer.restart();
                     }
                 }
 
