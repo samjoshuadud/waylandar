@@ -80,38 +80,71 @@ def fetch(year=None, month=None):
     timeMin = start_date.isoformat()
     timeMax = end_date.isoformat()
     
-    events_result = service.events().list(
-        calendarId='primary', 
-        timeMin=timeMin,
-        timeMax=timeMax,
-        maxResults=250, 
-        singleEvents=True,
-        orderBy='startTime'
-    ).execute()
+    cals = service.calendarList().list().execute().get('items', [])
     
-    events = events_result.get('items', [])
+    all_events = []
     
-    output = []
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        end = event['end'].get('dateTime', event['end'].get('date'))
+    def callback(request_id, response, exception):
+        if exception:
+            return
+        # Find the calendar metadata to inject into each event
+        cal_meta = next((c for c in cals if c['id'] == request_id), {})
+        cal_name = cal_meta.get('summary', 'Google')
+        cal_color = cal_meta.get('backgroundColor', '#4285F4')
         
-        reminders_list = []
-        reminders = event.get('reminders', {})
-        if reminders.get('useDefault'):
-            reminders_list.append(10)
-        else:
-            for override in reminders.get('overrides', []):
-                if override.get('method') == 'popup':
-                    reminders_list.append(override.get('minutes', 10))
-        
-        output.append({
-            "title": event.get('summary', 'Busy'),
-            "description": event.get('description', ''),
-            "start": start,
-            "end": end,
-            "link": event.get('htmlLink', ''),
-            "reminders": reminders_list
+        for event in response.get('items', []):
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            end = event['end'].get('dateTime', event['end'].get('date'))
+            
+            reminders_list = []
+            reminders = event.get('reminders', {})
+            if reminders.get('useDefault'):
+                reminders_list.append(10)
+            else:
+                for override in reminders.get('overrides', []):
+                    if override.get('method') == 'popup':
+                        reminders_list.append(override.get('minutes', 10))
+            
+            all_events.append({
+                "title": event.get('summary', 'Busy'),
+                "description": event.get('description', ''),
+                "start": start,
+                "end": end,
+                "link": event.get('htmlLink', ''),
+                "reminders": sorted(reminders_list),
+                "calendar_id": request_id,
+                "calendar_name": cal_name,
+                "calendar_color": cal_color
+            })
+
+    batch = service.new_batch_http_request(callback=callback)
+    
+    output_calendars = []
+    for c in cals:
+        # Pass calendar metadata to the UI
+        output_calendars.append({
+            "id": c['id'],
+            "name": c.get('summary', 'Google'),
+            "color": c.get('backgroundColor', '#4285F4'),
+            "selected": c.get('selected', False)
         })
         
-    return output
+        req = service.events().list(
+            calendarId=c['id'],
+            timeMin=timeMin,
+            timeMax=timeMax,
+            maxResults=250,
+            singleEvents=True,
+            orderBy='startTime'
+        )
+        batch.add(req, request_id=c['id'])
+        
+    batch.execute()
+    
+    # Sort all events chronologically since they came from different calendars
+    all_events.sort(key=lambda x: x['start'])
+    
+    return {
+        "events": all_events,
+        "calendars": output_calendars
+    }

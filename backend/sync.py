@@ -43,13 +43,17 @@ def background_sync():
     if provider == "google":
         from providers import google
         google.setup(is_background=True)
-        events = google.fetch(year, month)
-        print(json.dumps(events, indent=2))
+        data = google.fetch(year, month)
+        if isinstance(data, list):
+            data = {"events": data, "calendars": []}
+        print(json.dumps(data, indent=2))
     elif provider == "nextcloud":
         from providers import caldav
         caldav.setup(is_background=True)
-        events = caldav.fetch(year, month)
-        print(json.dumps(events, indent=2))
+        data = caldav.fetch(year, month)
+        if isinstance(data, list):
+            data = {"events": data, "calendars": []}
+        print(json.dumps(data, indent=2))
     else:
         print(json.dumps({"error": f"Unknown provider: {provider}"}))
         sys.exit(1)
