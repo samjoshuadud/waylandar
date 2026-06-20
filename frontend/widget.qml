@@ -18,10 +18,11 @@ ShellRoot {
             waitForEnd: true
             onStreamFinished: {
                 try {
-                    let parsed = JSON.parse(text);
+                    let parsedData = JSON.parse(text);
+                    let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
                     
-                    if (parsed.error) {
-                        authError = parsed.error;
+                    if (parsedData.error) {
+                        authError = parsedData.error;
                         calendarEvents = [];
                         return;
                     }
