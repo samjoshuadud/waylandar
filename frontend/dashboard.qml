@@ -111,9 +111,8 @@ property var availableCalendars: []
     FileView {
         id: configFileWatcher
         path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
-        watchChanges: true
         
-        function updateProvider() {
+        onTextChanged: {
             let content = configFileWatcher.text();
             if (content.trim() !== "") {
                 try {
@@ -124,9 +123,15 @@ property var availableCalendars: []
                 } catch(e) {}
             }
         }
-        
-        onLoaded: updateProvider()
-        onFileChanged: updateProvider()
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            configFileWatcher.reload();
+        }
     }
 
     Process {
@@ -148,7 +153,7 @@ property var availableCalendars: []
     Process {
         id: saveSelectedCals
         property string payload: ""
-        command: ["sh", "-c", "echo \"$1\" > ~/.cache/waylandar/selected_cals.json", "sh", payload]
+        command: ["sh", "-c", "mkdir -p ~/.cache/waylandar && echo \"$1\" > ~/.cache/waylandar/selected_cals.json", "sh", payload]
     }
 
     Process {

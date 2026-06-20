@@ -80,9 +80,8 @@ property var allRawEvents: []
     FileView {
         id: selectedCalsFile
         path: Quickshell.env("HOME") + "/.cache/waylandar/selected_cals.json"
-        watchChanges: true
         
-        function syncCals() {
+        onTextChanged: {
             let fileContent = selectedCalsFile.text();
             if (fileContent.trim() !== "") {
                 try {
@@ -90,24 +89,36 @@ property var allRawEvents: []
                 } catch(e) {}
             }
         }
-        
-        onLoaded: syncCals()
-        onFileChanged: syncCals()
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            selectedCalsFile.reload();
+        }
     }
 
     FileView {
         id: configFileWatcher
         path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
-        watchChanges: true
         
-        onFileChanged: {
-            // When config changes,trigger a background sync
-            // when provider change
+        onTextChanged: {
             if (!pythonScript.running) {
                 minutesUntilSync = 60; // Reset countdown
                 countdownTimer.restart(); 
                 pythonScript.running = true;
             }
+        }
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            configFileWatcher.reload();
         }
     }
 
