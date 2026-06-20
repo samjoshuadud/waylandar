@@ -143,6 +143,8 @@ property var allRawEvents: []
         }
         
         implicitWidth: 420
+        property real chromeHeight: 45 + 1 + 60 + 40  
+
         implicitHeight: {
             if (authError !== "") {
                 return 250;
@@ -150,7 +152,7 @@ property var allRawEvents: []
             if (calendarEvents.length === 0) {
                 return pythonScript.running ? 250 : 180;
             }
-            return Math.min(800, 130 + (calendarEvents.length * 75));
+            return Math.min(800, chromeHeight + calendarList.contentHeight);
         }
         color: "transparent"
         
@@ -286,6 +288,7 @@ property var allRawEvents: []
                     height: parent.height - 65
 
                     Components.CalendarList {
+                        id: calendarList
                         anchors.fill: parent
                         events: calendarEvents
                         errorMessage: authError
