@@ -44,7 +44,11 @@
 
           # Create a common initialization script
           cat > $out/bin/waylandar-init-theme <<EOF
+          if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
+          rm -rf ~/.config/waylandar/frontend
           mkdir -p ~/.config/waylandar/frontend/components
+          if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
+          
           # Symlink all read-only frontend files to the writable config directory individually to preserve structure
           ln -sfn $out/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
           ln -sfn $out/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
