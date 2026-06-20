@@ -10,9 +10,47 @@ Item {
     
     signal toggleCalendar(string calendarId)
 
+    property string activeProvider: "google"
+    
+    Rectangle {
+        id: providerBadge
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: 20
+        anchors.bottomMargin: 20
+        height: 26
+        width: providerIcon.width + providerText.width + 24
+        radius: 13
+        color: Theme.primary
+        opacity: 0.8
+        
+        Row {
+            anchors.centerIn: parent
+            spacing: 6
+            Text {
+                id: providerIcon
+                text: root.activeProvider === "nextcloud" ? "☁" : "G"
+                font.pixelSize: 12
+                font.bold: true
+                color: Theme.colorOnPrimary
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                id: providerText
+                text: root.activeProvider === "nextcloud" ? "Nextcloud" : "Google"
+                font.pixelSize: 12
+                font.bold: true
+                font.family: "Inter"
+                color: Theme.colorOnPrimary
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
     Column {
         anchors.fill: parent
         anchors.margins: 20
+        anchors.bottomMargin: providerBadge.height + 40 // Make room for the badge
         spacing: 20
         
         Text {

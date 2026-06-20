@@ -106,6 +106,29 @@ property var availableCalendars: []
     onCurrentViewYearChanged: updateMonthGrid()
 
 
+    property string activeProvider: "google" 
+
+    FileView {
+        id: configFileWatcher
+        path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
+        watchChanges: true
+        
+        function updateProvider() {
+            let content = configFileWatcher.text();
+            if (content.trim() !== "") {
+                try {
+                    let parsed = JSON.parse(content);
+                    if (parsed.active_provider) {
+                        activeProvider = parsed.active_provider;
+                    }
+                } catch(e) {}
+            }
+        }
+        
+        onLoaded: updateProvider()
+        onFileChanged: updateProvider()
+    }
+
     Process {
         id: loadSelectedCals
         command: ["sh", "-c", "cat ~/.cache/waylandar/selected_cals.json 2>/dev/null || echo ''"]
@@ -275,6 +298,7 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                     availableCalendars: shellRoot.availableCalendars
                     selectedCalendarIds: shellRoot.selectedCalendarIds
                     isFetching: shellRoot.isFetching
+                    activeProvider: shellRoot.activeProvider
                     
                     onToggleCalendar: function(calendarId) {
                         let sel = Object.assign({}, shellRoot.selectedCalendarIds);
