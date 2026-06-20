@@ -83,7 +83,8 @@ Waylandar uses OAuth 2.0 and requires your own Google Cloud credentials. One-tim
    mkdir -p ~/.config/waylandar
    mv ~/Downloads/your-credentials-file.json ~/.config/waylandar/credentials.json
    ```
-5. Run the auth flow:
+5. **Important:** In your Google Cloud Console, go to the **OAuth consent screen** and click **Publish App**. If you leave it in "Testing" mode, Google will force your login token to expire every 7 days
+6. Run the auth flow:
    ```bash
    # Nix or Arch install
    waylandar-auth

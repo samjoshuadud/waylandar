@@ -30,14 +30,18 @@ def authenticate():
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                creds = None
+        
+        if not creds or not creds.valid:
             if not os.path.exists(creds_path):
                 print(json.dumps({"error": f"Missing credentials.json at {creds_path}. Please follow the tutorial to get your API key."}))
                 exit(1)
 
             if '--background' in sys.argv:
-                print(json.dumps({"error": "Google Auth Required.\nPlease run this in your terminal:\n\nwaylandar-auth"}))
+                print(json.dumps({"error": "Google Auth Expired.\nPlease run this in your terminal:\n\nwaylandar-auth"}))
                 exit(1)
 
             flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
