@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.2] - 2026-06-21
+
+### Changed
+- Completely refactored the QML frontend architecture. Extracted massive monolithic codeblocks in `widget.qml` and `dashboard.qml` into modular, reusable components (`WidgetHeader`, `CalendarGridPane`, `AgendaListPane`, `LoadingSpinner`) for significantly cleaner and more maintainable code.
+
+### Fixed
+- Fixed an annoying visual bug in the desktop widget where expanding an event card would cause the entire widget window to dynamically resize and jump. The widget now uses a stable, fixed vertical height.
+
 ## [1.1.1] - 2026-06-21
 
 ### Fixed
