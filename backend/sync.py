@@ -2,6 +2,16 @@ import json
 import os
 import sys
 
+# ANSI Color Constants
+C_HEADER = '\033[95m\033[1m'
+C_BLUE = '\033[94m'
+C_CYAN = '\033[96m'
+C_GREEN = '\033[92m'
+C_WARN = '\033[93m'
+C_FAIL = '\033[91m'
+C_END = '\033[0m'
+C_BOLD = '\033[1m'
+
 CONFIG_PATH = os.path.expanduser('~/.config/waylandar/config.json')
 
 def load_config():
@@ -71,13 +81,13 @@ def interactive_wizard():
     # Zero-state: True First Run
     creds_path = os.path.expanduser('~/.config/waylandar/credentials.json')
     if not os.path.exists(CONFIG_PATH) and not os.path.exists(creds_path):
-        print("Welcome to Waylandar Calendar Setup!")
-        print("Which calendar do you want to configure?")
-        print("[1] Google")
-        print("[2] Nextcloud")
-        print("[3] Apple iCloud")
-        print("[4] ICS Link (Proton, etc.)")
-        choice = input("> ").strip()
+        print(f"{C_HEADER}Welcome to Waylandar Calendar Setup{C_END}")
+        print(f"{C_CYAN}Please select a calendar provider to configure:{C_END}")
+        print(f"  {C_BOLD}[1]{C_END} Google")
+        print(f"  {C_BOLD}[2]{C_END} Nextcloud")
+        print(f"  {C_BOLD}[3]{C_END} Apple iCloud")
+        print(f"  {C_BOLD}[4]{C_END} ICS Link (Proton, Outlook, Yahoo, etc.)")
+        choice = input(f"{C_BOLD}> {C_END}").strip()
         if choice == '1':
             setup_google(config, first_run=True)
         elif choice == '2':
@@ -87,22 +97,23 @@ def interactive_wizard():
         elif choice == '4':
             setup_ics(config, first_run=True)
         else:
-            print("Invalid choice.")
+            print(f"{C_FAIL}Invalid choice.{C_END}")
         return
 
     while True:
-        print("\n--- Waylandar Calendar Setup ---")
+        print(f"\n{C_HEADER}--- Waylandar Calendar Setup ---{C_END}")
         active = config.get("active_provider")
         providers = config.get("providers", {})
         
-        print(f"Current active provider: {active if active else 'None'}")
+        active_str = f"{C_GREEN}{active}{C_END}" if active else f"{C_WARN}None{C_END}"
+        print(f"{C_CYAN}Current active provider:{C_END} {active_str}\n")
         
         options = []
         all_providers = [
             ("google", "Google"),
             ("nextcloud", "Nextcloud"),
             ("icloud", "Apple iCloud"),
-            ("ics", "ICS Link (Proton)")
+            ("ics", "ICS Link (Proton, Outlook, Yahoo, etc.)")
         ]
         
         for key, name in all_providers:
@@ -115,7 +126,7 @@ def interactive_wizard():
                     options.append((f"Re-auth {name}", lambda: setup_icloud(config)))
                 elif key == "ics":
                     options.append((f"Add another {name}", lambda: setup_ics(config)))
-                    options.append((f"Manage ICS Feeds", lambda: manage_ics_feeds(config)))
+                    options.append(("Manage ICS Feeds", lambda: manage_ics_feeds(config)))
             else:
                 if key in providers:
                     options.append((f"Switch to {name}", lambda k=key: switch_provider(config, k)))
@@ -133,28 +144,28 @@ def interactive_wizard():
         options.append((f"Change Sync Interval (Current: {interval}m)", lambda: change_sync_interval(config)))
         options.append(("Exit", sys.exit))
         
-        for i, (text, _) in enumerate(options, 1):
-            print(f"{i}) {text}")
+        for i, (text, func) in enumerate(options):
+            print(f"  {C_BOLD}[{i+1}]{C_END} {text}")
             
-        choice = input("> ").strip()
+        choice = input(f"\n{C_BOLD}Select an option:{C_END} ").strip()
         try:
             idx = int(choice) - 1
             if 0 <= idx < len(options):
                 options[idx][1]()
             else:
-                print("Invalid choice.")
+                print(f"{C_FAIL}Invalid option.{C_END}")
         except ValueError:
             print("Invalid choice.")
 
-def switch_provider(config, provider):
-    config["active_provider"] = provider
+def switch_provider(config, new_provider):
+    config["active_provider"] = new_provider
     save_config(config)
-    print(f"Successfully switched active provider to {provider}.")
+    print(f"\n{C_GREEN}Switched active provider to {C_BOLD}{new_provider}{C_END}")
 
 def change_sync_interval(config):
     current = config.get("sync_interval", 60)
-    print(f"\nCurrent sync interval: {current} minutes")
-    val = input("Enter new sync interval in minutes (minimum 5): ").strip()
+    print(f"\n{C_CYAN}Current sync interval: {current} minutes{C_END}")
+    val = input(f"{C_CYAN}Enter new sync interval in minutes (minimum 5):{C_END} ").strip()
     try:
         val = int(val)
         if val < 5:
@@ -292,27 +303,27 @@ def clear_ics_feeds(config):
     if "providers" in config and "ics" in config["providers"]:
         config["providers"]["ics"]["feeds"] = []
         save_config(config)
-        print("\nSuccessfully cleared all ICS feeds!")
+        print(f"\n{C_GREEN}Successfully cleared all ICS feeds!{C_END}")
     else:
-        print("\nNo ICS feeds to clear.")
+        print(f"\n{C_WARN}No ICS feeds to clear.{C_END}")
 
 def manage_ics_feeds(config):
     feeds = config.get("providers", {}).get("ics", {}).get("feeds", [])
     if not feeds:
-        print("\nNo ICS feeds configured.")
+        print(f"\n{C_WARN}No ICS feeds configured.{C_END}")
         return
         
-    print("\n--- Managed ICS Feeds ---")
+    print(f"\n{C_HEADER}--- Managed ICS Feeds ---{C_END}")
     for i, feed in enumerate(feeds):
         url_trunc = feed.get('url', '')
         if len(url_trunc) > 40:
             url_trunc = url_trunc[:37] + "..."
-        print(f"[{i+1}] {feed.get('name', 'Unnamed')} ({url_trunc})")
+        print(f"  {C_BOLD}[{i+1}]{C_END} {C_CYAN}{feed.get('name', 'Unnamed')}{C_END} ({url_trunc})")
         
-    print(f"[{len(feeds)+1}] Cancel")
-    print(f"[{len(feeds)+2}] Clear ALL Feeds")
+    print(f"  {C_BOLD}[{len(feeds)+1}]{C_END} Cancel")
+    print(f"  {C_BOLD}[{len(feeds)+2}]{C_END} {C_FAIL}Clear ALL Feeds{C_END}")
     
-    choice = input("\nEnter the number of the feed to REMOVE, or choose an option: ").strip()
+    choice = input(f"\n{C_BOLD}Enter the number of the feed to REMOVE, or choose an option:{C_END} ").strip()
     
     try:
         idx = int(choice) - 1
@@ -323,26 +334,26 @@ def manage_ics_feeds(config):
         elif 0 <= idx < len(feeds):
             removed = feeds.pop(idx)
             save_config(config)
-            print(f"\nRemoved ICS Feed: {removed.get('name', 'Unnamed')}")
+            print(f"\n{C_GREEN}Removed ICS Feed: {C_BOLD}{removed.get('name', 'Unnamed')}{C_END}")
         else:
-            print("\nInvalid choice.")
+            print(f"\n{C_FAIL}Invalid choice.{C_END}")
     except ValueError:
-        print("\nInvalid input.")
+        print(f"\n{C_FAIL}Invalid input.{C_END}")
 
 def setup_ics(config, first_run=False):
-    print("\nStarting ICS Subscription Setup...")
-    print("Note: ICS links are read-only and usually start with http:// or webcal://")
+    print(f"\n{C_HEADER}Starting ICS Subscription Setup...{C_END}")
+    print(f"{C_BLUE}Note: ICS links are read-only and usually start with http:// or webcal://{C_END}")
     
     old_ics_config = None
     if "providers" in config and "ics" in config["providers"]:
         old_ics_config = config["providers"]["ics"].copy()
         
     try:
-        url = input("Enter public ICS / Webcal Link: ").strip()
+        url = input(f"{C_CYAN}Enter public ICS / Webcal Link:{C_END} ").strip()
         if url.startswith("webcal://"):
             url = url.replace("webcal://", "https://", 1)
             
-        name = input("Enter a custom name for this calendar (e.g. Proton): ").strip()
+        name = input(f"{C_CYAN}Enter a custom name for this calendar (e.g. Proton, Outlook, Yahoo, etc.):{C_END} ").strip()
         if not name:
             name = "ICS Calendar"
             
