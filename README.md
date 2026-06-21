@@ -1,7 +1,7 @@
 # Waylandar
 
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. 
-Officially supports **Google Calendar** and **Nextcloud Calendar (CalDAV)**.
+Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, and **Apple iCloud Calendar**.
 
 ![Demo](assets/demo-v1.1.gif)
 
@@ -106,6 +106,16 @@ Waylandar uses OAuth 2.0 and requires your own Google Cloud credentials. One-tim
    ```
 5. **Important:** In your Google Cloud Console, go to the **OAuth consent screen** and click **Publish App**. If you leave it in "Testing" mode, Google will force your login token to expire every 7 days.
 6. Run `waylandar` and follow the prompts to complete the Google login via your web browser.
+
+### Option C: Apple iCloud Calendar
+When prompted in the wizard, select Apple iCloud. You will need to provide:
+1. Your Apple ID Email.
+2. An App-Specific Password. 
+
+Apple requires an App-Specific Password for third-party calendar access. To generate one:
+1. Log into your Apple account at [account.apple.com](https://account.apple.com).
+2. Navigate to **App-Specific Passwords** and generate a new password.
+3. Paste the generated password into the terminal wizard when prompted. Do not use your main Apple ID password.
 
 ---
 
