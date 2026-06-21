@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Added native support for Apple iCloud Calendar via CalDAV. iCloud can now be selected directly from the interactive setup wizard.
+- Added support for subscribing to arbitrary read-only ICS feeds (e.g., Proton Calendar, Outlook, public holidays).
+- Added support for multiple concurrent ICS feed subscriptions, unifying events from multiple sources.
+- Introduced ANSI color formatting and structural improvements to the terminal setup wizard (`sync.py`), significantly enhancing readability and organization.
+
+### Fixed
+- Fixed an issue where the sub-calendar name and assigned colors were omitted when fetching CalDAV calendars, causing all events to appear as "Unknown" and grey in the UI.
+- Fixed a bug where clicking "Open in Browser" on an iCloud event attempted to open an invalid URL path. It now accurately points to the iCloud web calendar.
+- Replaced the Apple logo character in the provider sidebar badge with a universally safe `i` character to prevent missing font glyphs on standard Linux distributions.
+- Fixed a linting issue in `sync.py` due to an unused `datetime` import and an empty f-string block.
 
 ## [1.1.2] - 2026-06-21
 
