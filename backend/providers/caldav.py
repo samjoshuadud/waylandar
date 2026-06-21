@@ -103,7 +103,7 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
         
         try:
             results = cal.date_search(start=start_date, end=end_date, expand=False)
-            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id)
+            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color)
             all_events.extend(cal_events)
         except Exception:
             # Skip calendars that fail or don't support date_search (like tasks) but idk man
@@ -116,7 +116,7 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
         "calendars": all_cals_meta
     }
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id=""):
+def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color=""):
     output = []
     master_cal = icalendar.Calendar()
     
@@ -202,7 +202,9 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             "end": end_iso,
             "link": url,
             "reminders": sorted(reminders_list),
-            "calendar_id": cal_id
+            "calendar_id": cal_id,
+            "calendar_name": cal_name,
+            "calendar_color": cal_color
         })
         
     return output
