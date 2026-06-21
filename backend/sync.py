@@ -108,6 +108,8 @@ def interactive_wizard():
             else:
                 options.append(("Set up Nextcloud", lambda: setup_nextcloud(config)))
                 
+        interval = config.get("sync_interval", 60)
+        options.append((f"Change Sync Interval (Current: {interval}m)", lambda: change_sync_interval(config)))
         options.append(("Exit", sys.exit))
         
         for i, (text, _) in enumerate(options, 1):
@@ -127,6 +129,21 @@ def switch_provider(config, provider):
     config["active_provider"] = provider
     save_config(config)
     print(f"Successfully switched active provider to {provider}.")
+
+def change_sync_interval(config):
+    current = config.get("sync_interval", 60)
+    print(f"\nCurrent sync interval: {current} minutes")
+    val = input("Enter new sync interval in minutes (minimum 5): ").strip()
+    try:
+        val = int(val)
+        if val < 5:
+            print("Enforcing minimum interval of 5 minutes to prevent API rate limiting.")
+            val = 5
+        config["sync_interval"] = val
+        save_config(config)
+        print(f"Sync interval updated to {val} minutes.")
+    except ValueError:
+        print("Invalid input. Must be an integer.")
 
 def setup_google(config, first_run=False):
     from providers import google
