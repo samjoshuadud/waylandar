@@ -338,169 +338,32 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 Rectangle { width: 1; height: parent.height; color: Theme.outline }
 
                 // left pane for the visual calendar grid
-                Item {
+                Components.CalendarGridPane {
                     width: parent.contentWidth * 0.5
                     height: parent.height
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        spacing: 20
-                        
-                        Row {
-                            spacing: 20
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            
-                            // Previous Month Button
-                            Rectangle {
-                                width: 32; height: 32; radius: 16
-                                color: prevMouseArea.containsMouse ? Theme.outline : "transparent"
-                                Text { text: "◀"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
-                                MouseArea {
-                                    id: prevMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        currentViewMonth--;
-                                        if (currentViewMonth < 0) { currentViewMonth = 11; currentViewYear--; }
-                                        pythonScript.running = true;
-                                    }
-                                }
-                            }
-                            
-                            Text {
-                                text: currentMonthStr // e.g. "June 2026"
-                                font.pixelSize: 28
-                                font.bold: true
-                                font.family: "Inter"
-                                color: Theme.colorOnBackground
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            
-                            // Next Month Button
-                            Rectangle {
-                                width: 32; height: 32; radius: 16
-                                color: nextMouseArea.containsMouse ? Theme.outline : "transparent"
-                                Text { text: "▶"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
-                                MouseArea {
-                                    id: nextMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        currentViewMonth++;
-                                        if (currentViewMonth > 11) { currentViewMonth = 0; currentViewYear++; }
-                                        pythonScript.running = true;
-                                    }
-                                }
-                            }
+                    
+                    currentViewMonth: shellRoot.currentViewMonth
+                    currentViewYear: shellRoot.currentViewYear
+                    currentMonthStr: shellRoot.currentMonthStr
+                    monthDays: shellRoot.monthDays
+                    activeEventDays: shellRoot.activeEventDays
+                    selectedDateStr: shellRoot.selectedDateStr
+                    isFetching: shellRoot.isFetching
+                    
+                    onChangeMonth: function(offset) {
+                        shellRoot.currentViewMonth += offset;
+                        if (shellRoot.currentViewMonth < 0) { 
+                            shellRoot.currentViewMonth = 11; 
+                            shellRoot.currentViewYear--; 
+                        } else if (shellRoot.currentViewMonth > 11) { 
+                            shellRoot.currentViewMonth = 0; 
+                            shellRoot.currentViewYear++; 
                         }
-                        
-                        Row {
-                            width: parent.width
-                            spacing: 0
-                            Repeater {
-                                model: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-                                Text {
-                                    width: parent.width / 7
-                                    text: modelData
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                    font.family: "Inter"
-                                    color: Theme.primary
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-                            }
-                        }
-                        
-                        // The actual 7x6 month grid
-                        GridView {
-                            id: calGrid
-                            width: parent.width
-                            height: parent.height - 100
-                            cellWidth: width / 7
-                            cellHeight: height / 6
-                            model: monthDays
-                            interactive: false
-                            
-                            // Dim the grid when fetching
-                            opacity: isFetching ? 0.3 : 1.0
-                            Behavior on opacity { NumberAnimation { duration: 300 } }
-                            
-                            delegate: Rectangle {
-                                width: calGrid.cellWidth - 10
-                                height: calGrid.cellHeight - 10
-                                
-                                color: modelData.isCurrentMonth ? Theme.outline : Theme.surface
-                                radius: 12
-                                
-                                // Dim all unselected days, but less aggressively (from 0.3 up to 0.5)
-                                opacity: selectedDateStr === "" || selectedDateStr === modelData.dateStr ? 1.0 : 0.5
-                                Behavior on opacity { NumberAnimation { duration: 200 } }
-                                
-                                border.color: modelData.dateStr === new Date().toDateString() ? Theme.tertiary : "transparent"
-                                border.width: 2
-                                
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: modelData.dayNum
-                                    font.pixelSize: 18
-                                    font.family: "Inter"
-                                    font.bold: modelData.dateStr === new Date().toDateString()
-                                    // Text color is more solid now
-                                    color: modelData.isCurrentMonth ? Theme.colorOnBackground : Theme.colorOnSurfaceVariant
-                                }
-                                
-                                Rectangle {
-                                    width: 8; height: 8; radius: 4
-                                    color: Theme.primary
-                                    anchors.bottom: parent.bottom; anchors.bottomMargin: 10
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    visible: activeEventDays[modelData.dateStr] === true
-                                }
-                                
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (selectedDateStr === modelData.dateStr) {
-                                            selectedDateStr = ""; 
-                                        } else {
-                                            selectedDateStr = modelData.dateStr; 
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
+                        pythonScript.running = true;
                     }
                     
-                    // Custom Sleek Loading Spinner for Left Pane
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 32
-                        height: 32
-                        color: "transparent"
-                        radius: 16
-                        border.color: Theme.primary
-                        border.width: 3
-                        visible: opacity > 0
-                        opacity: isFetching ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 300 } }
-
-                        Rectangle {
-                            width: 16; height: 16; 
-                            color: Theme.background
-                            anchors.top: parent.top; anchors.right: parent.right
-                        }
-
-                        RotationAnimation on rotation {
-                            loops: Animation.Infinite
-                            from: 0; to: 360
-                            duration: 800
-                            running: isFetching
-                        }
+                    onDateSelected: function(dateStr) {
+                        shellRoot.selectedDateStr = dateStr;
                     }
                 }
 
@@ -512,66 +375,14 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 }
 
                 // right pane for the agenda tasks
-                Item {
+                Components.AgendaListPane {
                     width: parent.contentWidth * 0.35
                     height: parent.height
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        spacing: 20
-                        
-                        Text {
-                            id: agendaTitle
-                            // Automatically changes the title if a day is selected
-                            text: selectedDateStr === "" ? "Agenda" : "Agenda - " + new Date(selectedDateStr).toLocaleDateString(Qt.locale("en_US"), "ddd, MMM d")
-                            font.pixelSize: 24
-                            font.bold: true
-                            font.family: "Inter"
-                            color: Theme.colorOnBackground
-                        }
-                        
-                        // Re-using our modular widget list directly in the dashboard
-                        Components.CalendarList {
-                            id: rightAgendaList
-                            width: parent.width
-                            height: parent.height - agendaTitle.height - 20
-                            events: displayedEvents
-                            errorMessage: authError
-                            
-                            // Dim the agenda list when fetching
-                            opacity: isFetching ? 0.3 : 1.0
-                            Behavior on opacity { NumberAnimation { duration: 300 } }
-                        }
-                        
-                    }
                     
-                    // Custom Sleek Loading Spinner for Right Pane
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 32
-                        height: 32
-                        color: "transparent"
-                        radius: 16
-                        border.color: Theme.primary
-                        border.width: 3
-                        visible: opacity > 0
-                        opacity: isFetching ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 300 } }
-
-                        Rectangle {
-                            width: 16; height: 16; 
-                            color: Theme.background
-                            anchors.top: parent.top; anchors.right: parent.right
-                        }
-
-                        RotationAnimation on rotation {
-                            loops: Animation.Infinite
-                            from: 0; to: 360
-                            duration: 800
-                            running: isFetching
-                        }
-                    }
+                    selectedDateStr: shellRoot.selectedDateStr
+                    displayedEvents: shellRoot.displayedEvents
+                    authError: shellRoot.authError
+                    isFetching: shellRoot.isFetching
                 }
             }
         }

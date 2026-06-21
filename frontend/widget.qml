@@ -5,7 +5,8 @@ import Quickshell.Wayland
 import "components" as Components
 
 ShellRoot {
-property var allRawEvents: []
+    id: shellRoot
+    property var allRawEvents: []
     property var allRawCalendars: []
     
     property int calendarCount: {
@@ -200,15 +201,8 @@ property var allRawEvents: []
         implicitWidth: 420
         property real chromeHeight: 45 + 1 + 60 + 40  
 
-        implicitHeight: {
-            if (authError !== "") {
-                return 250;
-            }
-            if (calendarEvents.length === 0) {
-                return pythonScript.running ? 250 : 180;
-            }
-            return Math.min(800, chromeHeight + calendarList.contentHeight);
-        }
+        // Fixed stable sizing to prevent jumping when expanding events
+        implicitHeight: 600
         color: "transparent"
         
         // The Main Background
@@ -224,78 +218,16 @@ property var allRawEvents: []
                 anchors.margins: 30
                 spacing: 20
 
-                Item {
-                    width: parent.width
-                    height: 45
-
-                    Column {
-                        anchors.left: parent.left
-                        anchors.right: countdownText.left
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 4
-                        
-                        Text {
-                            text: "Upcoming Schedule"
-                            font.pixelSize: 18
-                            font.bold: true
-                            font.family: "Inter"
-                            color: Theme.colorOnBackground
-                        }
-                        
-                        Text {
-                            text: calendarCount > 0 ? calendarCount + " Active Calendars" : ""
-                            font.pixelSize: 12
-                            font.family: "Inter"
-                            color: Theme.tertiary
-                            visible: calendarCount > 0
-                        }
-                    }
-
-                    // Countdown Text
-                    Text {
-                        id: countdownText
-                        anchors.right: syncButton.left
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: pythonScript.running ? "" : "Syncs in " + minutesUntilSync + "m"
-                        font.pixelSize: 12
-                        font.italic: true
-                        color: Theme.colorOnSurfaceVariant
-                    }
-
-                    Rectangle {
-                        id: syncButton
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 50
-                        height: 26
-                        radius: 6
-                        color: syncMouseArea.containsMouse ? Theme.surfaceVariant : Theme.surface
-                        
-                        Behavior on color { ColorAnimation { duration: 150 } }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "Sync"
-                            font.pixelSize: 12
-                            font.bold: true
-                            font.family: "Inter"
-                            color: pythonScript.running ? Theme.colorOnSurfaceVariant : Theme.primary
-                        }
-
-                        MouseArea {
-                            id: syncMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (!pythonScript.running) {
-                                    minutesUntilSync = syncInterval; // Reset countdown
-                                    countdownTimer.restart();
-                                    pythonScript.running = true; 
-                                }
-                            }
+                Components.WidgetHeader {
+                    calendarCount: shellRoot.calendarCount // Referring to the property on ShellRoot
+                    minutesUntilSync: shellRoot.minutesUntilSync
+                    isSyncing: pythonScript.running
+                    
+                    onSyncRequested: {
+                        if (!pythonScript.running) {
+                            shellRoot.minutesUntilSync = shellRoot.syncInterval; // Reset countdown
+                            countdownTimer.restart();
+                            pythonScript.running = true; 
                         }
                     }
                 }
@@ -353,32 +285,8 @@ property var allRawEvents: []
                         Behavior on opacity { NumberAnimation { duration: 250 } }
                     }
 
-                    // Custom Sleek Loading Spinner
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 32
-                        height: 32
-                        color: "transparent"
-                        radius: 16
-                        border.color: Theme.primary
-                        border.width: 3
-                        visible: pythonScript.running
-
-                        // Creates the cutout for the spinner
-                        Rectangle {
-                            width: 16; height: 16; 
-                            color: Theme.background // Matches background
-                            anchors.top: parent.top; anchors.right: parent.right
-                        }
-
-                        // Spins it forever while loading!
-                        RotationAnimation on rotation {
-                            loops: Animation.Infinite
-                            from: 0
-                            to: 360
-                            duration: 800
-                            running: pythonScript.running
-                        }
+                    Components.LoadingSpinner {
+                        active: pythonScript.running
                     }
                 }
             }
