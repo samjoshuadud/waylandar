@@ -11,7 +11,7 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-def setup(is_background=False):
+def setup(is_background=False, force_reauth=False):
     config_dir = os.path.expanduser('~/.config/waylandar')
     cache_dir = os.path.expanduser('~/.cache/waylandar')
     
@@ -22,6 +22,12 @@ def setup(is_background=False):
     token_path = os.path.join(cache_dir, 'token.json')
 
     creds = None
+
+    if force_reauth and os.path.exists(token_path):
+        try:
+            os.remove(token_path)
+        except OSError:
+            pass
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)

@@ -86,7 +86,7 @@ def interactive_wizard():
         
         options = []
         if active == "google":
-            options.append(("Re-auth Google", lambda: setup_google(config)))
+            options.append(("Re-auth Google", lambda: setup_google(config, force_reauth=True)))
             if "nextcloud" in providers:
                 options.append(("Switch to Nextcloud", lambda: switch_provider(config, "nextcloud")))
             else:
@@ -145,10 +145,10 @@ def change_sync_interval(config):
     except ValueError:
         print("Invalid input. Must be an integer.")
 
-def setup_google(config, first_run=False):
+def setup_google(config, first_run=False, force_reauth=False):
     from providers import google
     print("\nStarting Google Calendar Setup...")
-    success = google.setup(is_background=False)
+    success = google.setup(is_background=False, force_reauth=force_reauth)
     if success:
         config["active_provider"] = "google"
         if "providers" not in config:
