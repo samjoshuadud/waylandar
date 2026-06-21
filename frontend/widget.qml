@@ -353,32 +353,8 @@ property var allRawEvents: []
                         Behavior on opacity { NumberAnimation { duration: 250 } }
                     }
 
-                    // Custom Sleek Loading Spinner
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 32
-                        height: 32
-                        color: "transparent"
-                        radius: 16
-                        border.color: Theme.primary
-                        border.width: 3
-                        visible: pythonScript.running
-
-                        // Creates the cutout for the spinner
-                        Rectangle {
-                            width: 16; height: 16; 
-                            color: Theme.background // Matches background
-                            anchors.top: parent.top; anchors.right: parent.right
-                        }
-
-                        // Spins it forever while loading!
-                        RotationAnimation on rotation {
-                            loops: Animation.Infinite
-                            from: 0
-                            to: 360
-                            duration: 800
-                            running: pythonScript.running
-                        }
+                    Components.LoadingSpinner {
+                        active: pythonScript.running
                     }
                 }
             }
