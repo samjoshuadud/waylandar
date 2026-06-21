@@ -58,13 +58,20 @@ def setup(is_background=False, force_reauth=False):
             try:
                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
                 creds = flow.run_local_server(port=0)
-            except Exception as e:
-                print(f"Authentication failed: {e}")
+            except BaseException as e:
+                if isinstance(e, KeyboardInterrupt):
+                    print("\nAuthentication cancelled by user.")
+                else:
+                    print(f"Authentication failed: {e}")
+                    
                 if force_reauth and os.path.exists(backup_path):
                     try:
                         os.rename(backup_path, token_path)
                     except OSError:
                         pass
+                
+                if isinstance(e, KeyboardInterrupt):
+                    sys.exit(1)
                 return False
 
             if force_reauth and os.path.exists(backup_path):

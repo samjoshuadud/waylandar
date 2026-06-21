@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed a bug where selecting "Re-auth Google" from the terminal wizard would skip the browser login if an old token already existed. The wizard now forcefully clears the old session to allow switching Google accounts.
+- Fixed an issue where cancelling the Google re-auth flow with `Ctrl+C` would fail to restore the backup token, causing users to be logged out. The backup is now reliably restored even if the terminal is forcefully interrupted.
 
 ## [1.1.0] - 2026-06-21
 
