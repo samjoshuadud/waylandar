@@ -24,25 +24,31 @@ def setup(is_background=False):
         return False
 
     ics_config = config.get("providers", {}).get("ics", {})
-    url = ics_config.get("url")
+    feeds = ics_config.get("feeds", [])
+    
+    if "url" in ics_config and not feeds:
+        feeds.append({"url": ics_config["url"]})
 
-    if not url:
+    if not feeds:
         if is_background:
-            print(json.dumps({"error": "ICS URL incomplete. Please run waylandar."}))
+            print(json.dumps({"error": "No ICS feeds configured. Please run waylandar."}))
             sys.exit(1)
         return False
 
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = response.read().decode('utf-8')
-            if "BEGIN:VCALENDAR" not in data:
-                raise Exception("URL does not return a valid iCalendar feed.")
-    except Exception as e:
-        if is_background:
-            print(json.dumps({"error": f"ICS validation failed: {str(e)}"}))
-            sys.exit(1)
-        return False
+    # Just validate the most recently added feed
+    latest_url = feeds[-1].get("url")
+    if latest_url:
+        try:
+            req = urllib.request.Request(latest_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = response.read().decode('utf-8')
+                if "BEGIN:VCALENDAR" not in data:
+                    raise Exception("URL does not return a valid iCalendar feed.")
+        except Exception as e:
+            if is_background:
+                print(json.dumps({"error": f"ICS validation failed: {str(e)}"}))
+                sys.exit(1)
+            return False
 
     return True
 
@@ -52,9 +58,15 @@ def fetch(year=None, month=None):
         config = json.load(f)
 
     ics_config = config.get("providers", {}).get("ics", {})
-    url = ics_config.get("url")
-    cal_name = ics_config.get("name", "ICS Calendar")
-    cal_color = ics_config.get("color", "#9C27B0")
+    feeds = ics_config.get("feeds", [])
+    
+    # Backwards compatibility
+    if "url" in ics_config and not feeds:
+        feeds.append({
+            "url": ics_config["url"],
+            "name": ics_config.get("name", "ICS Calendar"),
+            "color": ics_config.get("color", "#9C27B0")
+        })
 
     if year is not None and month is not None:
         start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
@@ -66,24 +78,39 @@ def fetch(year=None, month=None):
         last_day = calendar.monthrange(now.year, now.month)[1]
         end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
 
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            ics_data = response.read().decode('utf-8')
-
-        cal_events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color)
-        cal_events.sort(key=lambda x: x["start"])
+    all_cal_events = []
+    all_cals_meta = []
+    
+    colors = ["#9C27B0", "#E91E63", "#00BCD4", "#FF9800", "#4CAF50", "#3F51B5"]
+    
+    for idx, feed in enumerate(feeds):
+        url = feed.get("url")
+        if not url:
+            continue
+            
+        cal_name = feed.get("name", f"Feed {idx+1}")
+        cal_color = feed.get("color", colors[idx % len(colors)])
         
-        all_cals_meta = [{
-            "id": url,
-            "name": cal_name,
-            "color": cal_color,
-            "selected": True
-        }]
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                ics_data = response.read().decode('utf-8')
 
-        return {
-            "events": cal_events,
-            "calendars": all_cals_meta
-        }
-    except Exception as e:
-        return {"events": [], "calendars": []}
+            cal_events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color)
+            all_cal_events.extend(cal_events)
+            
+            all_cals_meta.append({
+                "id": url,
+                "name": cal_name,
+                "color": cal_color,
+                "selected": True
+            })
+        except Exception:
+            pass
+            
+    all_cal_events.sort(key=lambda x: x["start"])
+
+    return {
+        "events": all_cal_events,
+        "calendars": all_cals_meta
+    }

@@ -54,6 +54,13 @@ def background_sync():
         if isinstance(data, list):
             data = {"events": data, "calendars": []}
         print(json.dumps(data, indent=2))
+    elif provider == "ics":
+        from providers import ics
+        ics.setup(is_background=True)
+        data = ics.fetch(year, month)
+        if isinstance(data, list):
+            data = {"events": data, "calendars": []}
+        print(json.dumps(data, indent=2))
     else:
         print(json.dumps({"error": f"Unknown provider: {provider}"}))
         sys.exit(1)
@@ -69,6 +76,7 @@ def interactive_wizard():
         print("[1] Google")
         print("[2] Nextcloud")
         print("[3] Apple iCloud")
+        print("[4] ICS Link (Proton, etc.)")
         choice = input("> ").strip()
         if choice == '1':
             setup_google(config, first_run=True)
@@ -76,6 +84,8 @@ def interactive_wizard():
             setup_nextcloud(config, first_run=True)
         elif choice == '3':
             setup_icloud(config, first_run=True)
+        elif choice == '4':
+            setup_ics(config, first_run=True)
         else:
             print("Invalid choice.")
         return
@@ -91,7 +101,8 @@ def interactive_wizard():
         all_providers = [
             ("google", "Google"),
             ("nextcloud", "Nextcloud"),
-            ("icloud", "Apple iCloud")
+            ("icloud", "Apple iCloud"),
+            ("ics", "ICS Link (Proton)")
         ]
         
         for key, name in all_providers:
@@ -102,6 +113,9 @@ def interactive_wizard():
                     options.append((f"Re-auth {name}", lambda: setup_nextcloud(config)))
                 elif key == "icloud":
                     options.append((f"Re-auth {name}", lambda: setup_icloud(config)))
+                elif key == "ics":
+                    options.append((f"Add another {name}", lambda: setup_ics(config)))
+                    options.append((f"Manage ICS Feeds", lambda: manage_ics_feeds(config)))
             else:
                 if key in providers:
                     options.append((f"Switch to {name}", lambda k=key: switch_provider(config, k)))
@@ -112,6 +126,8 @@ def interactive_wizard():
                         options.append((f"Set up {name}", lambda: setup_nextcloud(config)))
                     elif key == "icloud":
                         options.append((f"Set up {name}", lambda: setup_icloud(config)))
+                    elif key == "ics":
+                        options.append((f"Set up {name}", lambda: setup_ics(config)))
                 
         interval = config.get("sync_interval", 60)
         options.append((f"Change Sync Interval (Current: {interval}m)", lambda: change_sync_interval(config)))
@@ -269,6 +285,103 @@ def setup_icloud(config, first_run=False):
             if "providers" not in config:
                 config["providers"] = {}
             config["providers"]["icloud"] = old_ic_config
+            save_config(config)
+        sys.exit(1)
+
+def clear_ics_feeds(config):
+    if "providers" in config and "ics" in config["providers"]:
+        config["providers"]["ics"]["feeds"] = []
+        save_config(config)
+        print("\nSuccessfully cleared all ICS feeds!")
+    else:
+        print("\nNo ICS feeds to clear.")
+
+def manage_ics_feeds(config):
+    feeds = config.get("providers", {}).get("ics", {}).get("feeds", [])
+    if not feeds:
+        print("\nNo ICS feeds configured.")
+        return
+        
+    print("\n--- Managed ICS Feeds ---")
+    for i, feed in enumerate(feeds):
+        url_trunc = feed.get('url', '')
+        if len(url_trunc) > 40:
+            url_trunc = url_trunc[:37] + "..."
+        print(f"[{i+1}] {feed.get('name', 'Unnamed')} ({url_trunc})")
+        
+    print(f"[{len(feeds)+1}] Cancel")
+    print(f"[{len(feeds)+2}] Clear ALL Feeds")
+    
+    choice = input("\nEnter the number of the feed to REMOVE, or choose an option: ").strip()
+    
+    try:
+        idx = int(choice) - 1
+        if idx == len(feeds):
+            return
+        elif idx == len(feeds) + 1:
+            clear_ics_feeds(config)
+        elif 0 <= idx < len(feeds):
+            removed = feeds.pop(idx)
+            save_config(config)
+            print(f"\nRemoved ICS Feed: {removed.get('name', 'Unnamed')}")
+        else:
+            print("\nInvalid choice.")
+    except ValueError:
+        print("\nInvalid input.")
+
+def setup_ics(config, first_run=False):
+    print("\nStarting ICS Subscription Setup...")
+    print("Note: ICS links are read-only and usually start with http:// or webcal://")
+    
+    old_ics_config = None
+    if "providers" in config and "ics" in config["providers"]:
+        old_ics_config = config["providers"]["ics"].copy()
+        
+    try:
+        url = input("Enter public ICS / Webcal Link: ").strip()
+        if url.startswith("webcal://"):
+            url = url.replace("webcal://", "https://", 1)
+            
+        name = input("Enter a custom name for this calendar (e.g. Proton): ").strip()
+        if not name:
+            name = "ICS Calendar"
+            
+        if "providers" not in config:
+            config["providers"] = {}
+        if "ics" not in config["providers"]:
+            config["providers"]["ics"] = {}
+        if "feeds" not in config["providers"]["ics"]:
+            config["providers"]["ics"]["feeds"] = []
+            
+        config["providers"]["ics"]["feeds"].append({
+            "url": url,
+            "name": name
+        })
+        
+        save_config(config)
+        
+        from providers import ics
+        success = ics.setup(is_background=False)
+        
+        if success:
+            config["active_provider"] = "ics"
+            save_config(config)
+            print("\nSuccessfully subscribed to the ICS Feed!")
+            if first_run:
+                print("You can now safely close this terminal and use the Waylandar widget.")
+                sys.exit(0)
+        else:
+            print("\nICS setup failed. Make sure the URL is accessible and returns valid iCalendar data.")
+            if old_ics_config is not None:
+                config["providers"]["ics"] = old_ics_config
+                save_config(config)
+                
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nSetup cancelled. Restoring previous configuration if available.")
+        if old_ics_config is not None:
+            if "providers" not in config:
+                config["providers"] = {}
+            config["providers"]["ics"] = old_ics_config
             save_config(config)
         sys.exit(1)
     
