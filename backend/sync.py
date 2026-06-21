@@ -102,6 +102,13 @@ def interactive_wizard():
 
     while True:
         print(f"\n{C_HEADER}--- Waylandar Calendar Setup ---{C_END}")
+        
+        # Self-healing: if active is ICS but no feeds exist, reset active
+        if config.get("active_provider") == "ics":
+            if not config.get("providers", {}).get("ics", {}).get("feeds", []):
+                config["active_provider"] = None
+                save_config(config)
+
         active = config.get("active_provider")
         providers = config.get("providers", {})
         
@@ -125,10 +132,22 @@ def interactive_wizard():
                 elif key == "icloud":
                     options.append((f"Re-auth {name}", lambda: setup_icloud(config)))
                 elif key == "ics":
-                    options.append((f"Add another {name}", lambda: setup_ics(config)))
+                    feeds = config.get("providers", {}).get("ics", {}).get("feeds", [])
+                    if feeds:
+                        options.append((f"Add another {name}", lambda: setup_ics(config)))
+                    else:
+                        options.append((f"Add {name}", lambda: setup_ics(config)))
                     options.append(("Manage ICS Feeds", lambda: manage_ics_feeds(config)))
             else:
+                is_configured = False
                 if key in providers:
+                    if key == "ics":
+                        if config.get("providers", {}).get("ics", {}).get("feeds", []):
+                            is_configured = True
+                    else:
+                        is_configured = True
+                        
+                if is_configured:
                     options.append((f"Switch to {name}", lambda k=key: switch_provider(config, k)))
                 else:
                     if key == "google":
@@ -302,13 +321,32 @@ def setup_icloud(config, first_run=False):
 def clear_ics_feeds(config):
     if "providers" in config and "ics" in config["providers"]:
         config["providers"]["ics"]["feeds"] = []
+        config["providers"]["ics"].pop("url", None)
+        config["providers"]["ics"].pop("name", None)
+        if config.get("active_provider") == "ics":
+            config["active_provider"] = None
         save_config(config)
         print(f"\n{C_GREEN}Successfully cleared all ICS feeds!{C_END}")
     else:
         print(f"\n{C_WARN}No ICS feeds to clear.{C_END}")
 
 def manage_ics_feeds(config):
-    feeds = config.get("providers", {}).get("ics", {}).get("feeds", [])
+    ics_config = config.get("providers", {}).get("ics", {})
+    feeds = ics_config.get("feeds", [])
+    
+    # Backwards compatibility upgrade
+    if "url" in ics_config and not feeds:
+        feeds.append({
+            "url": ics_config["url"],
+            "name": ics_config.get("name", "ICS Calendar")
+        })
+        ics_config["feeds"] = feeds
+        # Delete legacy keys so they don't respawn after clearing
+        ics_config.pop("url", None)
+        ics_config.pop("name", None)
+        ics_config.pop("color", None)
+        save_config(config)
+
     if not feeds:
         print(f"\n{C_WARN}No ICS feeds configured.{C_END}")
         return
@@ -333,6 +371,8 @@ def manage_ics_feeds(config):
             clear_ics_feeds(config)
         elif 0 <= idx < len(feeds):
             removed = feeds.pop(idx)
+            if not feeds and config.get("active_provider") == "ics":
+                config["active_provider"] = None
             save_config(config)
             print(f"\n{C_GREEN}Removed ICS Feed: {C_BOLD}{removed.get('name', 'Unnamed')}{C_END}")
         else:
