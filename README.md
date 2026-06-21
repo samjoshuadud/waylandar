@@ -1,7 +1,10 @@
 # Waylandar
 
-A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. 
-Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, and **Apple iCloud Calendar**.
+A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland** and Sway.
+
+Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, and **ICS Feed Subscriptions** (Proton Calendar, Outlook, Yahoo, public holidays, etc. — if your calendar supports exporting to ICS, we support it).
+
+> **Note:** Waylandar is currently read-only. You can reliably view your schedule and receive background notifications, but you cannot create or edit events directly from the widget yet. Push support for event creation is planned for a future release.
 
 ![Demo](assets/demo-v1.1.gif)
 
@@ -116,6 +119,11 @@ Apple requires an App-Specific Password for third-party calendar access. To gene
 1. Log into your Apple account at [account.apple.com](https://account.apple.com).
 2. Navigate to **App-Specific Passwords** and generate a new password.
 3. Paste the generated password into the terminal wizard when prompted. Do not use your main Apple ID password.
+
+### Option D: ICS Feed Subscriptions
+If your calendar provider is not natively supported but offers a public or secret `.ics` or `webcal://` share link (e.g., Proton Calendar, Microsoft Outlook, Yahoo Calendar, or standard holiday feeds), you can use the ICS Link option in the setup wizard.
+
+You can subscribe to as many ICS feeds as you want. The widget will seamlessly merge them and color-code them appropriately.
 
 ---
 
