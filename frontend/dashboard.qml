@@ -375,43 +375,14 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 }
 
                 // right pane for the agenda tasks
-                Item {
+                Components.AgendaListPane {
                     width: parent.contentWidth * 0.35
                     height: parent.height
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        spacing: 20
-                        
-                        Text {
-                            id: agendaTitle
-                            // Automatically changes the title if a day is selected
-                            text: selectedDateStr === "" ? "Agenda" : "Agenda - " + new Date(selectedDateStr).toLocaleDateString(Qt.locale("en_US"), "ddd, MMM d")
-                            font.pixelSize: 24
-                            font.bold: true
-                            font.family: "Inter"
-                            color: Theme.colorOnBackground
-                        }
-                        
-                        // Re-using our modular widget list directly in the dashboard
-                        Components.CalendarList {
-                            id: rightAgendaList
-                            width: parent.width
-                            height: parent.height - agendaTitle.height - 20
-                            events: displayedEvents
-                            errorMessage: authError
-                            
-                            // Dim the agenda list when fetching
-                            opacity: isFetching ? 0.3 : 1.0
-                            Behavior on opacity { NumberAnimation { duration: 300 } }
-                        }
-                        
-                    }
                     
-                    Components.LoadingSpinner {
-                        active: isFetching
-                    }
+                    selectedDateStr: shellRoot.selectedDateStr
+                    displayedEvents: shellRoot.displayedEvents
+                    authError: shellRoot.authError
+                    isFetching: shellRoot.isFetching
                 }
             }
         }
