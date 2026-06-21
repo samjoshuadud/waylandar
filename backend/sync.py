@@ -167,35 +167,54 @@ def setup_google(config, first_run=False, force_reauth=False):
 def setup_nextcloud(config, first_run=False):
     import getpass
     print("\nStarting Nextcloud Calendar Setup...")
-    url = input("Enter Nextcloud CalDAV URL (e.g. https://domain.com/remote.php/dav): ").strip()
-    username = input("Enter Username: ").strip()
-    password = getpass.getpass("Enter App Password: ").strip()
     
-    if "providers" not in config:
-        config["providers"] = {}
-    if "nextcloud" not in config["providers"]:
-        config["providers"]["nextcloud"] = {}
+    # Backup old config in case of failure or cancellation
+    old_nc_config = None
+    if "providers" in config and "nextcloud" in config["providers"]:
+        old_nc_config = config["providers"]["nextcloud"].copy()
         
-    config["providers"]["nextcloud"]["url"] = url
-    config["providers"]["nextcloud"]["username"] = username
-    config["providers"]["nextcloud"]["password"] = password
-    
-    # Save config temporarily so caldav.setup() can read it to verify
-    save_config(config)
-    
-    from providers import caldav
-    success = caldav.setup(is_background=False)
-    
-    if success:
-        config["active_provider"] = "nextcloud"
+    try:
+        url = input("Enter Nextcloud CalDAV URL (e.g. https://domain.com/remote.php/dav): ").strip()
+        username = input("Enter Username: ").strip()
+        password = getpass.getpass("Enter App Password: ").strip()
+        
+        if "providers" not in config:
+            config["providers"] = {}
+        if "nextcloud" not in config["providers"]:
+            config["providers"]["nextcloud"] = {}
+            
+        config["providers"]["nextcloud"]["url"] = url
+        config["providers"]["nextcloud"]["username"] = username
+        config["providers"]["nextcloud"]["password"] = password
+        
+        # Save config temporarily so caldav.setup() can read it to verify
         save_config(config)
-        print("\nSuccessfully authenticated with Nextcloud Calendar!")
-        if first_run:
-            print("You can now safely close this terminal and use the Waylandar widget.")
-            sys.exit(0)
-    else:
-        print("\nNextcloud Calendar setup failed.")
-        # Revert config if first setup? Leaving it is fine, they can re-run.
+        
+        from providers import caldav
+        success = caldav.setup(is_background=False)
+        
+        if success:
+            config["active_provider"] = "nextcloud"
+            save_config(config)
+            print("\nSuccessfully authenticated with Nextcloud Calendar!")
+            if first_run:
+                print("You can now safely close this terminal and use the Waylandar widget.")
+                sys.exit(0)
+        else:
+            print("\nNextcloud Calendar setup failed.")
+            # Revert config to backup since verification failed
+            if old_nc_config is not None:
+                config["providers"]["nextcloud"] = old_nc_config
+                save_config(config)
+                
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nSetup cancelled. Restoring previous configuration if available.")
+        if old_nc_config is not None:
+            if "providers" not in config:
+                config["providers"] = {}
+            config["providers"]["nextcloud"] = old_nc_config
+            save_config(config)
+        sys.exit(1)
     
 if __name__ == '__main__':
     if '--background' in sys.argv:
