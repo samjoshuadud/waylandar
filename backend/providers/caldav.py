@@ -7,11 +7,12 @@ import sys
 import icalendar
 import recurring_ical_events
 
-def setup(is_background=False):
+def setup(is_background=False, provider_key="nextcloud"):
+    name = provider_key.capitalize()
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     if not os.path.exists(config_path):
         if is_background:
-            print(json.dumps({"error": "Nextcloud config missing. Please run waylandar."}))
+            print(json.dumps({"error": f"{name} config missing. Please run waylandar."}))
             sys.exit(1)
         return False
 
@@ -24,14 +25,14 @@ def setup(is_background=False):
             sys.exit(1)
         return False
 
-    nc_config = config.get("providers", {}).get("nextcloud", {})
+    nc_config = config.get("providers", {}).get(provider_key, {})
     url = nc_config.get("url")
     username = nc_config.get("username")
     password = nc_config.get("password")
 
     if not (url and username and password):
         if is_background:
-            print(json.dumps({"error": "Nextcloud credentials incomplete. Please run waylandar."}))
+            print(json.dumps({"error": f"{name} credentials incomplete. Please run waylandar."}))
             sys.exit(1)
         return False
 
@@ -41,18 +42,18 @@ def setup(is_background=False):
         principal.calendars()
     except Exception as e:
         if is_background:
-            print(json.dumps({"error": f"Nextcloud auth failed: {str(e)}"}))
+            print(json.dumps({"error": f"{name} auth failed: {str(e)}"}))
             sys.exit(1)
         return False
 
     return True
 
-def fetch(year=None, month=None):
+def fetch(year=None, month=None, provider_key="nextcloud"):
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     with open(config_path, 'r') as f:
         config = json.load(f)
 
-    nc_config = config.get("providers", {}).get("nextcloud", {})
+    nc_config = config.get("providers", {}).get(provider_key, {})
     url = nc_config.get("url")
     username = nc_config.get("username")
     password = nc_config.get("password")
@@ -102,7 +103,7 @@ def fetch(year=None, month=None):
         
         try:
             results = cal.date_search(start=start_date, end=end_date, expand=False)
-            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id)
+            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color)
             all_events.extend(cal_events)
         except Exception:
             # Skip calendars that fail or don't support date_search (like tasks) but idk man
@@ -115,14 +116,19 @@ def fetch(year=None, month=None):
         "calendars": all_cals_meta
     }
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id=""):
+def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color=""):
     output = []
     master_cal = icalendar.Calendar()
     
     # Generate fallback calendar link from the CalDAV URL
     fallback_link = ""
     if nc_url:
-        fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
+        if "icloud.com" in nc_url:
+            fallback_link = "https://www.icloud.com/calendar/"
+        elif "/remote.php" in nc_url:
+            fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
+        else:
+            fallback_link = nc_url
     
     for ev in caldav_events_or_ics_strings:
         if isinstance(ev, str):
@@ -201,7 +207,9 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             "end": end_iso,
             "link": url,
             "reminders": sorted(reminders_list),
-            "calendar_id": cal_id
+            "calendar_id": cal_id,
+            "calendar_name": cal_name,
+            "calendar_color": cal_color
         })
         
     return output

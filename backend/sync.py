@@ -47,10 +47,10 @@ def background_sync():
         if isinstance(data, list):
             data = {"events": data, "calendars": []}
         print(json.dumps(data, indent=2))
-    elif provider == "nextcloud":
+    elif provider in ["nextcloud", "icloud"]:
         from providers import caldav
-        caldav.setup(is_background=True)
-        data = caldav.fetch(year, month)
+        caldav.setup(is_background=True, provider_key=provider)
+        data = caldav.fetch(year, month, provider_key=provider)
         if isinstance(data, list):
             data = {"events": data, "calendars": []}
         print(json.dumps(data, indent=2))
@@ -68,11 +68,14 @@ def interactive_wizard():
         print("Which calendar do you want to configure?")
         print("[1] Google")
         print("[2] Nextcloud")
+        print("[3] Apple iCloud")
         choice = input("> ").strip()
         if choice == '1':
             setup_google(config, first_run=True)
         elif choice == '2':
             setup_nextcloud(config, first_run=True)
+        elif choice == '3':
+            setup_icloud(config, first_run=True)
         else:
             print("Invalid choice.")
         return
@@ -85,28 +88,30 @@ def interactive_wizard():
         print(f"Current active provider: {active if active else 'None'}")
         
         options = []
-        if active == "google":
-            options.append(("Re-auth Google", lambda: setup_google(config, force_reauth=True)))
-            if "nextcloud" in providers:
-                options.append(("Switch to Nextcloud", lambda: switch_provider(config, "nextcloud")))
+        all_providers = [
+            ("google", "Google"),
+            ("nextcloud", "Nextcloud"),
+            ("icloud", "Apple iCloud")
+        ]
+        
+        for key, name in all_providers:
+            if active == key:
+                if key == "google":
+                    options.append((f"Re-auth {name}", lambda: setup_google(config, force_reauth=True)))
+                elif key == "nextcloud":
+                    options.append((f"Re-auth {name}", lambda: setup_nextcloud(config)))
+                elif key == "icloud":
+                    options.append((f"Re-auth {name}", lambda: setup_icloud(config)))
             else:
-                options.append(("Set up Nextcloud", lambda: setup_nextcloud(config)))
-        elif active == "nextcloud":
-            options.append(("Re-auth Nextcloud", lambda: setup_nextcloud(config)))
-            if "google" in providers:
-                options.append(("Switch to Google", lambda: switch_provider(config, "google")))
-            else:
-                options.append(("Set up Google", lambda: setup_google(config)))
-        else:
-            if "google" in providers:
-                options.append(("Switch to Google", lambda: switch_provider(config, "google")))
-            else:
-                options.append(("Set up Google", lambda: setup_google(config)))
-                
-            if "nextcloud" in providers:
-                options.append(("Switch to Nextcloud", lambda: switch_provider(config, "nextcloud")))
-            else:
-                options.append(("Set up Nextcloud", lambda: setup_nextcloud(config)))
+                if key in providers:
+                    options.append((f"Switch to {name}", lambda k=key: switch_provider(config, k)))
+                else:
+                    if key == "google":
+                        options.append((f"Set up {name}", lambda: setup_google(config)))
+                    elif key == "nextcloud":
+                        options.append((f"Set up {name}", lambda: setup_nextcloud(config)))
+                    elif key == "icloud":
+                        options.append((f"Set up {name}", lambda: setup_icloud(config)))
                 
         interval = config.get("sync_interval", 60)
         options.append((f"Change Sync Interval (Current: {interval}m)", lambda: change_sync_interval(config)))
@@ -191,7 +196,7 @@ def setup_nextcloud(config, first_run=False):
         save_config(config)
         
         from providers import caldav
-        success = caldav.setup(is_background=False)
+        success = caldav.setup(is_background=False, provider_key="nextcloud")
         
         if success:
             config["active_provider"] = "nextcloud"
@@ -213,6 +218,57 @@ def setup_nextcloud(config, first_run=False):
             if "providers" not in config:
                 config["providers"] = {}
             config["providers"]["nextcloud"] = old_nc_config
+            save_config(config)
+        sys.exit(1)
+
+def setup_icloud(config, first_run=False):
+    import getpass
+    print("\nStarting Apple iCloud Setup...")
+    print("Note: You MUST use an App-Specific Password generated from your Apple ID settings, NOT your main password.")
+    
+    old_ic_config = None
+    if "providers" in config and "icloud" in config["providers"]:
+        old_ic_config = config["providers"]["icloud"].copy()
+        
+    try:
+        # iCloud CalDAV standard URL
+        url = "https://caldav.icloud.com/"
+        username = input("Enter your Apple ID Email: ").strip()
+        password = getpass.getpass("Enter App-Specific Password: ").strip()
+        
+        if "providers" not in config:
+            config["providers"] = {}
+        if "icloud" not in config["providers"]:
+            config["providers"]["icloud"] = {}
+            
+        config["providers"]["icloud"]["url"] = url
+        config["providers"]["icloud"]["username"] = username
+        config["providers"]["icloud"]["password"] = password
+        
+        save_config(config)
+        
+        from providers import caldav
+        success = caldav.setup(is_background=False, provider_key="icloud")
+        
+        if success:
+            config["active_provider"] = "icloud"
+            save_config(config)
+            print("\nSuccessfully authenticated with Apple iCloud!")
+            if first_run:
+                print("You can now safely close this terminal and use the Waylandar widget.")
+                sys.exit(0)
+        else:
+            print("\niCloud setup failed. Make sure you are using an App-Specific Password!")
+            if old_ic_config is not None:
+                config["providers"]["icloud"] = old_ic_config
+                save_config(config)
+                
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nSetup cancelled. Restoring previous configuration if available.")
+        if old_ic_config is not None:
+            if "providers" not in config:
+                config["providers"] = {}
+            config["providers"]["icloud"] = old_ic_config
             save_config(config)
         sys.exit(1)
     
