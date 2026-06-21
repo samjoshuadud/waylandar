@@ -7,11 +7,12 @@ import sys
 import icalendar
 import recurring_ical_events
 
-def setup(is_background=False):
+def setup(is_background=False, provider_key="nextcloud"):
+    name = provider_key.capitalize()
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     if not os.path.exists(config_path):
         if is_background:
-            print(json.dumps({"error": "Nextcloud config missing. Please run waylandar."}))
+            print(json.dumps({"error": f"{name} config missing. Please run waylandar."}))
             sys.exit(1)
         return False
 
@@ -24,14 +25,14 @@ def setup(is_background=False):
             sys.exit(1)
         return False
 
-    nc_config = config.get("providers", {}).get("nextcloud", {})
+    nc_config = config.get("providers", {}).get(provider_key, {})
     url = nc_config.get("url")
     username = nc_config.get("username")
     password = nc_config.get("password")
 
     if not (url and username and password):
         if is_background:
-            print(json.dumps({"error": "Nextcloud credentials incomplete. Please run waylandar."}))
+            print(json.dumps({"error": f"{name} credentials incomplete. Please run waylandar."}))
             sys.exit(1)
         return False
 
@@ -41,18 +42,18 @@ def setup(is_background=False):
         principal.calendars()
     except Exception as e:
         if is_background:
-            print(json.dumps({"error": f"Nextcloud auth failed: {str(e)}"}))
+            print(json.dumps({"error": f"{name} auth failed: {str(e)}"}))
             sys.exit(1)
         return False
 
     return True
 
-def fetch(year=None, month=None):
+def fetch(year=None, month=None, provider_key="nextcloud"):
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     with open(config_path, 'r') as f:
         config = json.load(f)
 
-    nc_config = config.get("providers", {}).get("nextcloud", {})
+    nc_config = config.get("providers", {}).get(provider_key, {})
     url = nc_config.get("url")
     username = nc_config.get("username")
     password = nc_config.get("password")
