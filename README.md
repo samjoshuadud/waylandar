@@ -3,7 +3,7 @@
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. 
 Officially supports **Google Calendar** and **Nextcloud Calendar (CalDAV)**.
 
-![Demo](assets/demo.gif)
+![Demo](assets/demo-v1.1.gif)
 
 ## Overview
 
@@ -81,7 +81,7 @@ Waylandar includes an interactive setup wizard that allows you to easily configu
 Run the wizard from your terminal:
 ```bash
 # Nix or Arch install
-waylandar-auth
+waylandar
 
 # Manual / cloned repo
 cd backend && uv run python sync.py
@@ -105,7 +105,7 @@ Waylandar uses OAuth 2.0 and requires your own Google Cloud credentials. One-tim
    mv ~/Downloads/your-credentials-file.json ~/.config/waylandar/credentials.json
    ```
 5. **Important:** In your Google Cloud Console, go to the **OAuth consent screen** and click **Publish App**. If you leave it in "Testing" mode, Google will force your login token to expire every 7 days.
-6. Run `waylandar-auth` and follow the prompts to complete the Google login via your web browser.
+6. Run `waylandar` and follow the prompts to complete the Google login via your web browser.
 
 ---
 
@@ -139,6 +139,10 @@ output_path = "~/.config/waylandar/frontend/Theme.qml"
 ```
 
 ---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
 
 ## License
 

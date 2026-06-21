@@ -11,7 +11,7 @@ def setup(is_background=False):
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     if not os.path.exists(config_path):
         if is_background:
-            print(json.dumps({"error": "Nextcloud config missing. Please run waylandar-auth."}))
+            print(json.dumps({"error": "Nextcloud config missing. Please run waylandar."}))
             sys.exit(1)
         return False
 
@@ -31,7 +31,7 @@ def setup(is_background=False):
 
     if not (url and username and password):
         if is_background:
-            print(json.dumps({"error": "Nextcloud credentials incomplete. Please run waylandar-auth."}))
+            print(json.dumps({"error": "Nextcloud credentials incomplete. Please run waylandar."}))
             sys.exit(1)
         return False
 

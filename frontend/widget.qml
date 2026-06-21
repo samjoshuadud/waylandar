@@ -75,6 +75,7 @@ property var allRawEvents: []
 
     property string authError: ""
     property var selectedCalendarIds: ({})
+    property int syncInterval: 60
     property int minutesUntilSync: 60
 
     FileView {
@@ -105,8 +106,17 @@ property var allRawEvents: []
         path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
         
         onTextChanged: {
+            let content = text();
+            if (content) {
+                try {
+                    let cfg = JSON.parse(content);
+                    if (cfg.sync_interval !== undefined && cfg.sync_interval !== syncInterval) {
+                        syncInterval = cfg.sync_interval;
+                    }
+                } catch(e) {}
+            }
             if (!pythonScript.running) {
-                minutesUntilSync = 60; // Reset countdown
+                minutesUntilSync = syncInterval; // Reset countdown
                 countdownTimer.restart(); 
                 pythonScript.running = true;
             }
@@ -125,7 +135,7 @@ property var allRawEvents: []
     Process {
 
         id: pythonScript
-        command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py --background; elif command -v waylandar-auth >/dev/null 2>&1; then waylandar-auth --background; else echo '{\"error\": \"Backend not found\"}'; fi"]
+        command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py --background; elif command -v waylandar >/dev/null 2>&1; then waylandar --background; else echo '{\"error\": \"Backend not found\"}'; fi"]
         running: true
         
         stdout: StdioCollector {
@@ -281,8 +291,8 @@ property var allRawEvents: []
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (!pythonScript.running) {
-                                    minutesUntilSync = 60; // Reset countdown
-                                    countdownTimer.restart(); 
+                                    minutesUntilSync = syncInterval; // Reset countdown
+                                    countdownTimer.restart();
                                     pythonScript.running = true; 
                                 }
                             }
@@ -314,7 +324,7 @@ property var allRawEvents: []
                         }
                         
                         if (minutesUntilSync <= 0) {
-                            minutesUntilSync = 60; // Reset to 60 for the next hour
+                            minutesUntilSync = syncInterval; // Reset to syncInterval for the next hour
                             if (!pythonScript.running) {
                                 pythonScript.running = true;
                             }

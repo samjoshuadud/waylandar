@@ -41,7 +41,7 @@ package() {
   # Create the global executable bash wrappers
   install -d "$pkgdir/usr/bin"
   
-  cat > "$pkgdir/usr/bin/waylandar-auth" <<EOF
+  cat > "$pkgdir/usr/bin/waylandar" <<EOF
 #!/bin/bash
 exec /usr/bin/python3 /usr/share/waylandar/backend/sync.py "\$@"
 EOF
@@ -83,5 +83,5 @@ exec quickshell -p ~/.config/waylandar/frontend/dashboard.qml
 EOF
 
   # Make all wrappers executable
-  chmod +x "$pkgdir/usr/bin/waylandar-"{auth,widget,dashboard}
+  chmod +x "$pkgdir/usr/bin/waylandar" "$pkgdir/usr/bin/waylandar-widget" "$pkgdir/usr/bin/waylandar-dashboard"
 }
