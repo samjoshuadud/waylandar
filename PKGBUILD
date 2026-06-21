@@ -1,6 +1,6 @@
 pkgname=waylandar-git
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A standalone Wayland Calendar widget built with Quickshell and Python (Supports Google & Nextcloud)"
 arch=('any')
 url="https://github.com/samjoshuadud/waylandar" 
@@ -14,6 +14,7 @@ depends=(
     'python-caldav'
     'python-icalendar'
     'python-recurring-ical-events'
+    'python-cryptography'
 )
 makedepends=('git')
 provides=('waylandar')

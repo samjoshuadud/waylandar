@@ -17,6 +17,7 @@
         caldav
         icalendar
         recurring-ical-events
+        cryptography
       ]);
 
       waylandarPkg = pkgs.stdenv.mkDerivation {
