@@ -1,6 +1,6 @@
 pkgname=waylandar-git
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A standalone Wayland Calendar widget built with Quickshell and Python (Supports Google & Nextcloud)"
 arch=('any')
 url="https://github.com/samjoshuadud/waylandar" 
@@ -42,7 +42,7 @@ package() {
   
   cat > "$pkgdir/usr/bin/waylandar-auth" <<EOF
 #!/bin/bash
-exec python /usr/share/waylandar/backend/sync.py "\$@"
+exec /usr/bin/python3 /usr/share/waylandar/backend/sync.py "\$@"
 EOF
 
   cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
