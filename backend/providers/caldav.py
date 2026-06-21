@@ -123,7 +123,12 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
     # Generate fallback calendar link from the CalDAV URL
     fallback_link = ""
     if nc_url:
-        fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
+        if "icloud.com" in nc_url:
+            fallback_link = "https://www.icloud.com/calendar/"
+        elif "/remote.php" in nc_url:
+            fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
+        else:
+            fallback_link = nc_url
     
     for ev in caldav_events_or_ics_strings:
         if isinstance(ev, str):
