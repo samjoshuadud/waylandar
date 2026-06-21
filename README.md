@@ -50,9 +50,11 @@ nix profile install github:samjoshuadud/waylandar
 
 AUR publishing is temporarily blocked due to the ongoing chain attack mitigation. Install locally for now:
 
+> **Note:** `quickshell-git` and `uv` are required before running `makepkg -si`.
+
 ```bash
-# Install the quickshell dependency first
-yay -S quickshell-git
+# Install the required dependencies first
+yay -S quickshell-git uv
 
 # Clone and build
 git clone https://github.com/samjoshuadud/waylandar.git
