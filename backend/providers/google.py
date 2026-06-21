@@ -23,9 +23,10 @@ def setup(is_background=False, force_reauth=False):
 
     creds = None
 
+    backup_path = token_path + '.bak'
     if force_reauth and os.path.exists(token_path):
         try:
-            os.remove(token_path)
+            os.rename(token_path, backup_path)
         except OSError:
             pass
 
@@ -59,7 +60,18 @@ def setup(is_background=False, force_reauth=False):
                 creds = flow.run_local_server(port=0)
             except Exception as e:
                 print(f"Authentication failed: {e}")
+                if force_reauth and os.path.exists(backup_path):
+                    try:
+                        os.rename(backup_path, token_path)
+                    except OSError:
+                        pass
                 return False
+
+            if force_reauth and os.path.exists(backup_path):
+                try:
+                    os.remove(backup_path)
+                except OSError:
+                    pass
 
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
