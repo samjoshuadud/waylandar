@@ -29,7 +29,7 @@ Item {
             spacing: 6
             Text {
                 id: providerIcon
-                text: root.activeProvider === "nextcloud" ? "☁" : "G"
+                text: root.activeProvider === "nextcloud" ? "☁" : (root.activeProvider === "icloud" ? "" : "G")
                 font.pixelSize: 12
                 font.bold: true
                 color: Theme.colorOnPrimary
@@ -37,7 +37,7 @@ Item {
             }
             Text {
                 id: providerText
-                text: root.activeProvider === "nextcloud" ? "Nextcloud" : "Google"
+                text: root.activeProvider === "nextcloud" ? "Nextcloud" : (root.activeProvider === "icloud" ? "iCloud" : "Google")
                 font.pixelSize: 12
                 font.bold: true
                 font.family: "Inter"
