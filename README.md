@@ -140,6 +140,10 @@ output_path = "~/.config/waylandar/frontend/Theme.qml"
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
