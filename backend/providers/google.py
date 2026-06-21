@@ -44,7 +44,7 @@ def setup(is_background=False):
                     return False
 
             if is_background:
-                error_msg = "Google Auth Required/Expired.\nPlease run this in your terminal:\n\nwaylandar-auth\n(or 'uv run python sync.py' if installed manually)"
+                error_msg = "Google Auth Required/Expired.\nPlease run this in your terminal:\n\nwaylandar\n(or 'uv run python sync.py' if installed manually)"
                 print(json.dumps({"error": error_msg}))
                 sys.exit(1)
 

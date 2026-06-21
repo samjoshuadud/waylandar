@@ -30,7 +30,7 @@ def background_sync():
     provider = config.get("active_provider")
     
     if not provider:
-        print(json.dumps({"error": "No calendar configured.\nPlease run this in your terminal:\n\nwaylandar-auth\n(or 'uv run python sync.py' if installed manually)"}))
+        print(json.dumps({"error": "No calendar configured.\nPlease run this in your terminal:\n\nwaylandar\n(or 'uv run python sync.py' if installed manually)"}))
         sys.exit(1)
         
     year = None
