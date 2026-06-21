@@ -3,7 +3,7 @@
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. 
 Officially supports **Google Calendar** and **Nextcloud Calendar (CalDAV)**.
 
-![Demo](assets/demo.gif)
+![Demo](assets/demo-v1.1.gif)
 
 ## Overview
 
