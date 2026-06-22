@@ -77,6 +77,15 @@ def fetch(year=None, month=None):
                 if file.endswith(".ics"):
                     file_path = os.path.join(root, file)
                     try:
+                        # Ensure it's a regular file and not a named pipe/device
+                        if not os.path.isfile(file_path):
+                            continue
+                            
+                        # Prevent memory exhaustion from massive files (Limit: 50MB)
+                        if os.path.getsize(file_path) > 50 * 1024 * 1024:
+                            print(f"Warning: {file_path} exceeds 50MB limit. Skipping.", file=sys.stderr)
+                            continue
+                            
                         with open(file_path, 'r', encoding='utf-8') as ics_file:
                             ics_data_list.append(ics_file.read())
                     except Exception as e:
