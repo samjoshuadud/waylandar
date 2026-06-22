@@ -528,6 +528,12 @@ def setup_vdirsyncer(config, first_run=False):
             print(f"{C_FAIL}Error: Directory does not exist! ({expanded_path}){C_END}")
             return
             
+        # Prevent duplicate directories
+        existing_paths = [os.path.expanduser(d.get("path", "")) for d in config["providers"]["vdirsyncer"]["directories"]]
+        if expanded_path in existing_paths:
+            print(f"{C_WARN}Error: You have already added this directory!{C_END}")
+            return
+            
         name = input(f"{C_CYAN}Enter a custom name for this calendar:{C_END} ").strip()
         if not name:
             name = "Local Calendar"

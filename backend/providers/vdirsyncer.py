@@ -86,8 +86,14 @@ def fetch(year=None, month=None):
                             print(f"Warning: {file_path} exceeds 50MB limit. Skipping.", file=sys.stderr)
                             continue
                             
-                        with open(file_path, 'r', encoding='utf-8') as ics_file:
-                            ics_data_list.append(ics_file.read())
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as ics_file:
+                                content = ics_file.read()
+                        except UnicodeDecodeError:
+                            # Fallback for legacy systems (e.g. older Outlook exports)
+                            with open(file_path, 'r', encoding='latin-1') as ics_file:
+                                content = ics_file.read()
+                        ics_data_list.append(content)
                     except Exception as e:
                         print(f"Error reading {file_path}: {e}", file=sys.stderr)
         
