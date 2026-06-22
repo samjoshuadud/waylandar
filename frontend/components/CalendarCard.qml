@@ -129,7 +129,8 @@ Rectangle {
             Text {
                 text: {
                     if (!eventData || !eventData.reminders || eventData.reminders.length === 0) return "🔔 No reminder set.";
-                    return "🔔 Reminder: " + eventData.reminders.join(", ") + " minutes before";
+                    let textArr = eventData.reminders.map(r => r === 0 ? "At time of event" : r + " minutes before");
+                    return "🔔 Reminder: " + textArr.join(", ");
                 }
                 font.pixelSize: 12
                 font.family: "Inter"

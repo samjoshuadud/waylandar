@@ -183,7 +183,7 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
                     td = trigger.dt
                     if isinstance(td, datetime.timedelta):
                         minutes_before = int(td.total_seconds() / -60)
-                        if minutes_before > 0:
+                        if minutes_before >= 0:
                             reminders_list.append(minutes_before)
                     elif isinstance(td, datetime.datetime):
                         # Calculate difference from event start time
@@ -196,11 +196,8 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
                             
                         diff = s_val - td
                         minutes_before = int(diff.total_seconds() / 60)
-                        if minutes_before > 0:
+                        if minutes_before >= 0:
                             reminders_list.append(minutes_before)
-                            
-        if not has_alarm:
-            reminders_list.append(10)
             
         output.append({
             "title": summary,
