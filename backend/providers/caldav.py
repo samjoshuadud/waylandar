@@ -173,11 +173,9 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             end_iso = start_iso
             
         reminders_list = []
-        has_alarm = False
         
         for component in event.walk():
             if component.name == "VALARM":
-                has_alarm = True
                 trigger = component.get('TRIGGER')
                 if trigger:
                     td = trigger.dt
