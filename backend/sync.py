@@ -94,7 +94,7 @@ def interactive_wizard():
         print(f"  {C_BOLD}[2]{C_END} Nextcloud")
         print(f"  {C_BOLD}[3]{C_END} Apple iCloud")
         print(f"  {C_BOLD}[4]{C_END} ICS Link (Proton, Outlook, Yahoo, etc.)")
-        print(f"  {C_BOLD}[5]{C_END} Local Directory (vdirsyncer)")
+        print(f"  {C_BOLD}[5]{C_END} Local Directory (.ics files)")
         choice = input(f"{C_BOLD}> {C_END}").strip()
         if choice == '1':
             setup_google(config, first_run=True)
@@ -136,7 +136,7 @@ def interactive_wizard():
             ("nextcloud", "Nextcloud"),
             ("icloud", "Apple iCloud"),
             ("ics", "ICS Link (Proton, Outlook, Yahoo, etc.)"),
-            ("vdirsyncer", "Local Directory (vdirsyncer)")
+            ("vdirsyncer", "Local Directory (.ics files)")
         ]
         
         for key, name in all_providers:
@@ -510,7 +510,7 @@ def manage_vdirsyncer(config):
         print(f"\n{C_FAIL}Invalid input.{C_END}")
 
 def setup_vdirsyncer(config, first_run=False):
-    print(f"\n{C_HEADER}Starting vdirsyncer Setup...{C_END}")
+    print(f"\n{C_HEADER}Starting Local Directory Setup...{C_END}")
     print(f"{C_BLUE}Provide the path to a local directory containing your .ics files.{C_END}")
     
     if "providers" not in config:
