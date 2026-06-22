@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.2.0] - 2026-06-22
 
 ### Added
 - Added native support for Apple iCloud Calendar via CalDAV. iCloud can now be selected directly from the interactive setup wizard.
@@ -13,10 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Introduced ANSI color formatting and structural improvements to the terminal setup wizard (`sync.py`), significantly enhancing readability and organization.
 
 ### Changed
+- Dismantled the monolithic `sync.py` entrypoint into a highly decoupled `core/` package architecture (daemon, cli, config), eliminating the God File anti-pattern.
 - Completely removed `vdirsyncer` terminology from the user interface and documentation to clarify that the backend acts as a pure, decoupled filesystem parser and does not execute network sync tools itself.
 
 ### Fixed
 - Added an automatic fallback to the frontend state loader. When users switch calendar providers entirely (which changes all internal calendar IDs), the widget now automatically checks all new calendars by default instead of showing an empty UI.
+- Fixed a major UX bug causing notification spam for ICS feeds and Local Directories by removing the hardcoded 10-minute fallback alarm on read-only events.
+- Fixed a QML rendering bug where Apple iCloud passed 8-character RGBA colors (e.g. `#FF2D55FF`) which broke widget color coding. Alpha channels are now safely stripped to standard 6-character hex.
+- Fixed the UI text formatting for 0-minute alarms, properly rendering them as "At time of event" instead of "0 minutes before".
+- Hardened backwards compatibility for `v1.0.0` users so their legacy `credentials.json` silently and seamlessly maps to the new `config.json` architecture without them needing to re-authenticate.
 - Hardened the Local Directory parser against Denial of Service (DoS) by enforcing a 50MB file size limit and validating that targets are regular files (preventing infinite reads from named pipes like `/dev/zero`).
 - Hardened `os.walk` to prevent infinite recursion and daemon crashes if a user creates a circular symlink inside their calendar folder.
 - Added a `Latin-1` decoding fallback to safely parse legacy `.ics` files exported from older enterprise software (like legacy MS Outlook) that don't adhere to modern `UTF-8` standards.
