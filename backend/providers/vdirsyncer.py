@@ -73,6 +73,9 @@ def fetch(year=None, month=None):
                 continue
             visited_dirs.add(real_root)
             
+            # Ignore hidden directories (e.g. .git, .vdirsyncer metadata)
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            
             for file in files:
                 if file.endswith(".ics"):
                     file_path = os.path.join(root, file)
