@@ -71,6 +71,13 @@ def background_sync():
         if isinstance(data, list):
             data = {"events": data, "calendars": []}
         print(json.dumps(data, indent=2))
+    elif provider == "vdirsyncer":
+        from providers import vdirsyncer
+        vdirsyncer.setup(is_background=True)
+        data = vdirsyncer.fetch(year, month)
+        if isinstance(data, list):
+            data = {"events": data, "calendars": []}
+        print(json.dumps(data, indent=2))
     else:
         print(json.dumps({"error": f"Unknown provider: {provider}"}))
         sys.exit(1)
@@ -87,6 +94,7 @@ def interactive_wizard():
         print(f"  {C_BOLD}[2]{C_END} Nextcloud")
         print(f"  {C_BOLD}[3]{C_END} Apple iCloud")
         print(f"  {C_BOLD}[4]{C_END} ICS Link (Proton, Outlook, Yahoo, etc.)")
+        print(f"  {C_BOLD}[5]{C_END} Local Directory (vdirsyncer)")
         choice = input(f"{C_BOLD}> {C_END}").strip()
         if choice == '1':
             setup_google(config, first_run=True)
@@ -96,6 +104,8 @@ def interactive_wizard():
             setup_icloud(config, first_run=True)
         elif choice == '4':
             setup_ics(config, first_run=True)
+        elif choice == '5':
+            setup_vdirsyncer(config, first_run=True)
         else:
             print(f"{C_FAIL}Invalid choice.{C_END}")
         return
@@ -120,7 +130,8 @@ def interactive_wizard():
             ("google", "Google"),
             ("nextcloud", "Nextcloud"),
             ("icloud", "Apple iCloud"),
-            ("ics", "ICS Link (Proton, Outlook, Yahoo, etc.)")
+            ("ics", "ICS Link (Proton, Outlook, Yahoo, etc.)"),
+            ("vdirsyncer", "Local Directory (vdirsyncer)")
         ]
         
         for key, name in all_providers:
@@ -138,11 +149,16 @@ def interactive_wizard():
                     else:
                         options.append((f"Add {name}", lambda: setup_ics(config)))
                     options.append(("Manage ICS Feeds", lambda: manage_ics_feeds(config)))
+                elif key == "vdirsyncer":
+                    options.append((f"Add another {name}", lambda: setup_vdirsyncer(config)))
             else:
                 is_configured = False
                 if key in providers:
                     if key == "ics":
                         if config.get("providers", {}).get("ics", {}).get("feeds", []):
+                            is_configured = True
+                    elif key == "vdirsyncer":
+                        if config.get("providers", {}).get("vdirsyncer", {}).get("directories", []):
                             is_configured = True
                     else:
                         is_configured = True
@@ -158,6 +174,8 @@ def interactive_wizard():
                         options.append((f"Set up {name}", lambda: setup_icloud(config)))
                     elif key == "ics":
                         options.append((f"Set up {name}", lambda: setup_ics(config)))
+                    elif key == "vdirsyncer":
+                        options.append((f"Set up {name}", lambda: setup_vdirsyncer(config)))
                 
         interval = config.get("sync_interval", 60)
         options.append((f"Change Sync Interval (Current: {interval}m)", lambda: change_sync_interval(config)))
@@ -435,6 +453,44 @@ def setup_ics(config, first_run=False):
             config["providers"]["ics"] = old_ics_config
             save_config(config)
         sys.exit(1)
+
+def setup_vdirsyncer(config, first_run=False):
+    print(f"\n{C_HEADER}Starting vdirsyncer Setup...{C_END}")
+    print(f"{C_BLUE}Provide the path to a local directory containing your .ics files.{C_END}")
+    
+    if "providers" not in config:
+        config["providers"] = {}
+    if "vdirsyncer" not in config["providers"]:
+        config["providers"]["vdirsyncer"] = {}
+    if "directories" not in config["providers"]["vdirsyncer"]:
+        config["providers"]["vdirsyncer"]["directories"] = []
+        
+    try:
+        path = input(f"{C_CYAN}Enter directory path (e.g. ~/.local/share/calendars/personal):{C_END} ").strip()
+        expanded_path = os.path.expanduser(path)
+        
+        if not os.path.isdir(expanded_path):
+            print(f"{C_FAIL}Error: Directory does not exist! ({expanded_path}){C_END}")
+            return
+            
+        name = input(f"{C_CYAN}Enter a custom name for this calendar:{C_END} ").strip()
+        if not name:
+            name = "Local Calendar"
+            
+        config["providers"]["vdirsyncer"]["directories"].append({
+            "path": path,
+            "name": name
+        })
+        
+        config["active_provider"] = "vdirsyncer"
+        save_config(config)
+        
+        print(f"\n{C_GREEN}Successfully added local directory!{C_END}")
+        if first_run:
+            print("You can now safely close this terminal and use the Waylandar widget.")
+            sys.exit(0)
+    except (KeyboardInterrupt, EOFError):
+        print("\n\nSetup cancelled.")
     
 if __name__ == '__main__':
     if '--background' in sys.argv:
