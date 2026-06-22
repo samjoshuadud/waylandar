@@ -91,6 +91,8 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
             props = cal.get_properties(['{http://apple.com/ns/ical/}calendar-color'])
             if props and '{http://apple.com/ns/ical/}calendar-color' in props:
                 cal_color = props['{http://apple.com/ns/ical/}calendar-color']
+                if cal_color and len(cal_color) == 9 and cal_color.startswith('#'):
+                    cal_color = cal_color[:7]
         except Exception:
             pass
 
