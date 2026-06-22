@@ -9,9 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added native support for Apple iCloud Calendar via CalDAV. iCloud can now be selected directly from the interactive setup wizard.
 - Added support for subscribing to arbitrary read-only ICS feeds (e.g., Proton Calendar, Outlook, public holidays).
 - Added support for multiple concurrent ICS feed subscriptions, unifying events from multiple sources.
+- Added native support for Local Directories. Users can now point Waylandar to a local folder containing `.ics` files, and it will safely parse and sync those events to the widget. Perfect for `vdirsyncer`, Nextcloud Client, or custom script integrations.
 - Introduced ANSI color formatting and structural improvements to the terminal setup wizard (`sync.py`), significantly enhancing readability and organization.
 
+### Changed
+- Completely removed `vdirsyncer` terminology from the user interface and documentation to clarify that the backend acts as a pure, decoupled filesystem parser and does not execute network sync tools itself.
+
 ### Fixed
+- Added an automatic fallback to the frontend state loader. When users switch calendar providers entirely (which changes all internal calendar IDs), the widget now automatically checks all new calendars by default instead of showing an empty UI.
+- Hardened the Local Directory parser against Denial of Service (DoS) by enforcing a 50MB file size limit and validating that targets are regular files (preventing infinite reads from named pipes like `/dev/zero`).
+- Hardened `os.walk` to prevent infinite recursion and daemon crashes if a user creates a circular symlink inside their calendar folder.
+- Added a `Latin-1` decoding fallback to safely parse legacy `.ics` files exported from older enterprise software (like legacy MS Outlook) that don't adhere to modern `UTF-8` standards.
+- Sped up directory parsing and prevented the loading of "ghost" deleted events by automatically bypassing hidden metadata cache folders (e.g., `.vdirsyncer`, `.sync`, `.git`).
+- Added validation in the CLI wizard to prevent users from adding the exact same local directory twice, which previously resulted in duplicate events flooding the UI.
 - Fixed an issue where the sub-calendar name and assigned colors were omitted when fetching CalDAV calendars, causing all events to appear as "Unknown" and grey in the UI.
 - Fixed a bug where clicking "Open in Browser" on an iCloud event attempted to open an invalid URL path. It now accurately points to the iCloud web calendar.
 - Replaced the Apple logo character in the provider sidebar badge with a universally safe `i` character to prevent missing font glyphs on standard Linux distributions.

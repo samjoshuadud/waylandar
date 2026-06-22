@@ -154,6 +154,25 @@ ShellRoot {
                     authError = "";
                     allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
                     allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+                    
+                    // Auto-select fallback for new providers
+                    let sel = Object.assign({}, selectedCalendarIds);
+                    let hasSelected = false;
+                    for (let i=0; i<allRawCalendars.length; i++) {
+                        if (sel[allRawCalendars[i].id]) {
+                            hasSelected = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasSelected && allRawCalendars.length > 0) {
+                        for (let i=0; i<allRawCalendars.length; i++) {
+                            if (allRawCalendars[i].selected !== false) {
+                                sel[allRawCalendars[i].id] = true;
+                            }
+                        }
+                        selectedCalendarIds = sel;
+                    }
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }

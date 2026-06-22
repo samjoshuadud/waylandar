@@ -2,7 +2,7 @@
 
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland** and Sway.
 
-Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, and **ICS Feed Subscriptions** (Proton Calendar, Outlook, Yahoo, public holidays, etc. — if your calendar supports exporting to ICS, we support it).
+Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, **ICS Feed Subscriptions**, and **Local Directories** (for parsing local `.ics` files managed by vdirsyncer, Nextcloud Client, or custom scripts).
 
 > **Note:** Waylandar is currently read-only. You can reliably view your schedule and receive background notifications, but you cannot create or edit events directly from the widget yet. Push support for event creation is planned for a future release.
 
@@ -124,6 +124,11 @@ Apple requires an App-Specific Password for third-party calendar access. To gene
 If your calendar provider is not natively supported but offers a public or secret `.ics` or `webcal://` share link (e.g., Proton Calendar, Microsoft Outlook, Yahoo Calendar, or standard holiday feeds), you can use the ICS Link option in the setup wizard.
 
 You can subscribe to as many ICS feeds as you want. The widget will seamlessly merge them and color-code them appropriately.
+
+### Option E: Local Directory (.ics files)
+If you prefer to sync your calendar files manually using tools like `vdirsyncer`, Nextcloud Desktop, Syncthing, or custom bash scripts, you can point Waylandar to a local directory.
+
+Waylandar acts as a decoupled filesystem parser. It will safely recurse through the folder you provide, bypass hidden metadata folders (like `.vdirsyncer/`), and instantly sync any `.ics` files it finds directly into the widget UI. You remain fully responsible for downloading/syncing those files via your external tool of choice.
 
 ---
 

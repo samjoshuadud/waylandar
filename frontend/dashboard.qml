@@ -186,15 +186,18 @@ property var availableCalendars: []
 let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                     availableCalendars = calendars;
                     
-                    if (Object.keys(selectedCalendarIds).length === 0) {
-                        let sel = {};
-                        for (let i=0; i<calendars.length; i++) {
-                            if (calendars[i].selected) {
-                                sel[calendars[i].id] = true;
-                            }
+                    let sel = Object.assign({}, selectedCalendarIds);
+                    let hasSelected = false;
+                    for (let i=0; i<calendars.length; i++) {
+                        if (sel[calendars[i].id]) {
+                            hasSelected = true;
+                            break;
                         }
-                        if (Object.keys(sel).length === 0) {
-                            for (let i=0; i<calendars.length; i++) {
+                    }
+                    
+                    if (!hasSelected && calendars.length > 0) {
+                        for (let i=0; i<calendars.length; i++) {
+                            if (calendars[i].selected !== false) {
                                 sel[calendars[i].id] = true;
                             }
                         }
