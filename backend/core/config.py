@@ -17,7 +17,15 @@ def load_config():
     if os.path.exists(CONFIG_PATH):
         try:
             with open(CONFIG_PATH, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                if "active_provider" not in data:
+                    creds_path = os.path.expanduser('~/.config/waylandar/credentials.json')
+                    if os.path.exists(creds_path):
+                        data["active_provider"] = "google"
+                        if "providers" not in data:
+                            data["providers"] = {}
+                        data["providers"]["google"] = {"configured": True}
+                return data
         except Exception:
             return {"active_provider": None, "providers": {}}
     else:
