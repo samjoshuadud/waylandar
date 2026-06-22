@@ -118,6 +118,11 @@ def interactive_wizard():
             if not config.get("providers", {}).get("ics", {}).get("feeds", []):
                 config["active_provider"] = None
                 save_config(config)
+        # Self-healing: if active is vdirsyncer but no dirs exist, reset active
+        if config.get("active_provider") == "vdirsyncer":
+            if not config.get("providers", {}).get("vdirsyncer", {}).get("directories", []):
+                config["active_provider"] = None
+                save_config(config)
 
         active = config.get("active_provider")
         providers = config.get("providers", {})
@@ -150,7 +155,12 @@ def interactive_wizard():
                         options.append((f"Add {name}", lambda: setup_ics(config)))
                     options.append(("Manage ICS Feeds", lambda: manage_ics_feeds(config)))
                 elif key == "vdirsyncer":
-                    options.append((f"Add another {name}", lambda: setup_vdirsyncer(config)))
+                    dirs = config.get("providers", {}).get("vdirsyncer", {}).get("directories", [])
+                    if dirs:
+                        options.append((f"Add another {name}", lambda: setup_vdirsyncer(config)))
+                    else:
+                        options.append((f"Add {name}", lambda: setup_vdirsyncer(config)))
+                    options.append(("Manage Local Directories", lambda: manage_vdirsyncer(config)))
             else:
                 is_configured = False
                 if key in providers:
@@ -453,6 +463,51 @@ def setup_ics(config, first_run=False):
             config["providers"]["ics"] = old_ics_config
             save_config(config)
         sys.exit(1)
+
+def clear_vdirsyncer(config):
+    if "providers" in config and "vdirsyncer" in config["providers"]:
+        config["providers"]["vdirsyncer"]["directories"] = []
+        if config.get("active_provider") == "vdirsyncer":
+            config["active_provider"] = None
+        save_config(config)
+        print(f"\n{C_GREEN}Successfully cleared all local directories!{C_END}")
+    else:
+        print(f"\n{C_WARN}No local directories to clear.{C_END}")
+
+def manage_vdirsyncer(config):
+    dirs = config.get("providers", {}).get("vdirsyncer", {}).get("directories", [])
+    if not dirs:
+        print(f"\n{C_WARN}No local directories configured.{C_END}")
+        return
+        
+    print(f"\n{C_HEADER}--- Managed Local Directories ---{C_END}")
+    for i, d in enumerate(dirs):
+        path_trunc = d.get('path', '')
+        if len(path_trunc) > 40:
+            path_trunc = "..." + path_trunc[-37:]
+        print(f"  {C_BOLD}[{i+1}]{C_END} {C_CYAN}{d.get('name', 'Unnamed')}{C_END} ({path_trunc})")
+        
+    print(f"  {C_BOLD}[{len(dirs)+1}]{C_END} Cancel")
+    print(f"  {C_BOLD}[{len(dirs)+2}]{C_END} {C_FAIL}Clear ALL Directories{C_END}")
+    
+    choice = input(f"\n{C_BOLD}Enter the number of the directory to REMOVE, or choose an option:{C_END} ").strip()
+    
+    try:
+        idx = int(choice) - 1
+        if idx == len(dirs):
+            return
+        elif idx == len(dirs) + 1:
+            clear_vdirsyncer(config)
+        elif 0 <= idx < len(dirs):
+            removed = dirs.pop(idx)
+            if not dirs and config.get("active_provider") == "vdirsyncer":
+                config["active_provider"] = None
+            save_config(config)
+            print(f"\n{C_GREEN}Removed Local Directory: {C_BOLD}{removed.get('name', 'Unnamed')}{C_END}")
+        else:
+            print(f"\n{C_FAIL}Invalid choice.{C_END}")
+    except ValueError:
+        print(f"\n{C_FAIL}Invalid input.{C_END}")
 
 def setup_vdirsyncer(config, first_run=False):
     print(f"\n{C_HEADER}Starting vdirsyncer Setup...{C_END}")
