@@ -51,10 +51,11 @@ EOF
 if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
 rm -rf ~/.config/waylandar/frontend
 mkdir -p ~/.config/waylandar/frontend/components
-if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
 
 ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
 ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
+
+if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
 cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
 chmod 644 ~/.config/waylandar/theme_template.qml
 if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
@@ -69,10 +70,11 @@ EOF
 if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
 rm -rf ~/.config/waylandar/frontend
 mkdir -p ~/.config/waylandar/frontend/components
-if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
 
 ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
 ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
+
+if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
 cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
 chmod 644 ~/.config/waylandar/theme_template.qml
 if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then

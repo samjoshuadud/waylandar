@@ -48,11 +48,13 @@
           if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
           rm -rf ~/.config/waylandar/frontend
           mkdir -p ~/.config/waylandar/frontend/components
-          if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
           
           # Symlink all read-only frontend files to the writable config directory individually to preserve structure
           ln -sfn $out/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
           ln -sfn $out/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
+          
+          # Restore the Matugen theme backup AFTER the symlinks are generated, so it safely overwrites the default symlink
+          if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
           
           # Copy the template for Matugen to use
           cp $out/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
