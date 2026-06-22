@@ -62,9 +62,17 @@ def fetch(year=None, month=None):
         })
         
         ics_data_list = []
+        visited_dirs = set()
         
         # Scan the directory and read all .ics files
-        for root, _, files in os.walk(folder_path):
+        for root, dirs, files in os.walk(folder_path, followlinks=True):
+            # Prevent infinite recursion from circular symlinks
+            real_root = os.path.realpath(root)
+            if real_root in visited_dirs:
+                dirs[:] = [] # Stop traversing this branch
+                continue
+            visited_dirs.add(real_root)
+            
             for file in files:
                 if file.endswith(".ics"):
                     file_path = os.path.join(root, file)
