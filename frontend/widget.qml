@@ -152,9 +152,11 @@ ShellRoot {
             allRawEvents = [];
             allRawCalendars = [];
             return;
+        } else if (parsedData.errors && parsedData.errors.length > 0) {
+            authError = parsedData.errors.join("\n");
+        } else {
+            authError = "";
         }
-        
-        authError = "";
         allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
         allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
         

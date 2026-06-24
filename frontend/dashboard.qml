@@ -227,9 +227,11 @@ ShellRoot {
             authError = parsedData.error;
             allEvents = [];
             return;
+        } else if (parsedData.errors && parsedData.errors.length > 0) {
+            authError = parsedData.errors.join("\n");
+        } else {
+            authError = "";
         }
-        
-        authError = "";
         
         let now = new Date();
         let todayStr = now.toDateString();
