@@ -120,6 +120,7 @@ ShellRoot {
     }
 
     Component.onCompleted: updateMonthGrid()
+    Component.onDestruction: finalizeAccountToggle()
     onCurrentViewMonthChanged: updateMonthGrid()
     onCurrentViewYearChanged: updateMonthGrid()
 
@@ -318,6 +319,10 @@ ShellRoot {
     }
 
     function handleAccountToggle(accountId, provider, enabled) {
+        if (pendingAccountId !== "" && pendingAccountId !== accountId) {
+            finalizeAccountToggle();
+        }
+
         let states = Object.assign({}, localAccountStates);
         states[accountId] = enabled;
         localAccountStates = states;
