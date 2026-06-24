@@ -83,12 +83,12 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
     if not calendars:
         return {"events": [], "calendars": []}
     
-    all_events = []
-    all_cals_meta = []
-    
+    from concurrent.futures import ThreadPoolExecutor
+
     fallback_colors = ["#4285F4", "#0F9D58", "#F4B400", "#DB4437", "#673AB7", "#00BCD4", "#FF9800", "#9C27B0"]
     
-    for i, cal in enumerate(calendars):
+    def fetch_cal_data(item):
+        i, cal = item
         cal_id = str(cal.url)
         cal_name = cal.name if hasattr(cal, 'name') and cal.name else f"Calendar {i+1}"
         
@@ -102,25 +102,37 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
         except Exception:
             pass
 
-        all_cals_meta.append({
+        meta = {
             "id": cal_id,
             "name": cal_name,
             "color": cal_color,
             "selected": True,
             "account_id": account_id,
             "account_name": account_name
-        })
+        }
         
+        events = []
         try:
             results = cal.date_search(start=start_date, end=end_date, expand=False)
-            cal_events = parse_caldav_events(
+            events = parse_caldav_events(
                 results, start_date, end_date, 
                 nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color,
                 account_id=account_id
             )
-            all_events.extend(cal_events)
         except Exception:
-            continue
+            pass
+            
+        return meta, events
+
+    all_events = []
+    all_cals_meta = []
+
+    with ThreadPoolExecutor(max_workers=min(len(calendars), 10)) as executor:
+        results = list(executor.map(fetch_cal_data, enumerate(calendars)))
+        
+    for meta, events in results:
+        all_cals_meta.append(meta)
+        all_events.extend(events)
     
     all_events.sort(key=lambda x: x["start"])
     
@@ -128,6 +140,7 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
         "events": all_events,
         "calendars": all_cals_meta
     }
+
 
 def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color="", account_id=""):
     output = []

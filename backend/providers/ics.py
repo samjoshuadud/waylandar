@@ -78,18 +78,18 @@ def fetch(year=None, month=None):
         last_day = calendar.monthrange(now.year, now.month)[1]
         end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
 
-    all_cal_events = []
-    all_cals_meta = []
-    
+    from concurrent.futures import ThreadPoolExecutor
+
     colors = ["#9C27B0", "#E91E63", "#00BCD4", "#FF9800", "#4CAF50", "#3F51B5"]
     
-    for idx, feed in enumerate(feeds):
+    def fetch_feed(item):
+        idx, feed = item
         if not feed.get("enabled", True):
-            continue
+            return None
             
         url = feed.get("url")
         if not url:
-            continue
+            return None
             
         cal_name = feed.get("name", f"Feed {idx+1}")
         cal_color = feed.get("color", colors[idx % len(colors)])
@@ -99,19 +99,30 @@ def fetch(year=None, month=None):
             with urllib.request.urlopen(req, timeout=10) as response:
                 ics_data = response.read().decode('utf-8')
 
-            cal_events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color, account_id="ics")
-            all_cal_events.extend(cal_events)
-            
-            all_cals_meta.append({
+            events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color, account_id="ics")
+            meta = {
                 "id": url,
                 "name": cal_name,
                 "color": cal_color,
                 "selected": True,
                 "account_id": "ics",
                 "account_name": "ICS Subscriptions"
-            })
+            }
+            return meta, events
         except Exception:
-            pass
+            return None
+
+    all_cal_events = []
+    all_cals_meta = []
+
+    with ThreadPoolExecutor(max_workers=min(len(feeds), 10)) as executor:
+        results = list(executor.map(fetch_feed, enumerate(feeds)))
+        
+    for res in results:
+        if res:
+            meta, events = res
+            all_cals_meta.append(meta)
+            all_cal_events.extend(events)
             
     all_cal_events.sort(key=lambda x: x["start"])
 
