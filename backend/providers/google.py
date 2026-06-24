@@ -47,8 +47,7 @@ def setup(is_background=False, force_reauth=False, account_id=None):
         if not creds or not creds.valid:
             if not os.path.exists(creds_path):
                 if is_background:
-                    print(json.dumps({"error": f"Missing credentials.json at {creds_path}. Please follow the tutorial."}))
-                    sys.exit(1)
+                    raise RuntimeError(f"Missing credentials.json at {creds_path}. Please follow the tutorial.")
                 else:
                     print(f"Error: Missing credentials.json at {creds_path}.")
                     print("Please follow the README tutorial to get your API key.")
@@ -56,8 +55,7 @@ def setup(is_background=False, force_reauth=False, account_id=None):
 
             if is_background:
                 error_msg = "Google Auth Required/Expired.\nPlease run this in your terminal:\n\nwaylandar\n(or 'uv run python sync.py' if installed manually)"
-                print(json.dumps({"error": error_msg}))
-                sys.exit(1)
+                raise RuntimeError(error_msg)
 
             try:
                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
