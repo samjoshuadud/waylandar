@@ -10,8 +10,11 @@ def background_sync():
     month = None
     args = [arg for arg in sys.argv if arg != '--background']
     if len(args) == 3:
-        year = int(args[1])
-        month = int(args[2])
+        try:
+            year = int(args[1])
+            month = int(args[2])
+        except ValueError:
+            pass
         
     tasks = []
     

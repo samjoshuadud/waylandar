@@ -10,7 +10,7 @@ import recurring_ical_events
 def setup(is_background=False, provider_key="nextcloud", url=None, username=None, password=None):
     if url and username and password:
         try:
-            client = caldav.DAVClient(url=url, username=username, password=password)
+            client = caldav.DAVClient(url=url, username=username, password=password, timeout=10)
             principal = client.principal()
             principal.calendars()
             return True
@@ -47,7 +47,7 @@ def setup(is_background=False, provider_key="nextcloud", url=None, username=None
 
     for acc in enabled_accounts:
         try:
-            client = caldav.DAVClient(url=acc.get("url"), username=acc.get("username"), password=acc.get("password"))
+            client = caldav.DAVClient(url=acc.get("url"), username=acc.get("username"), password=acc.get("password"), timeout=10)
             principal = client.principal()
             principal.calendars()
         except Exception as e:
@@ -60,7 +60,7 @@ def setup(is_background=False, provider_key="nextcloud", url=None, username=None
 
 def fetch(account_id, account_name, url, username, password, year=None, month=None):
     try:
-        client = caldav.DAVClient(url=url, username=username, password=password)
+        client = caldav.DAVClient(url=url, username=username, password=password, timeout=10)
         principal = client.principal()
     except Exception as e:
         return {"events": [], "calendars": [], "error": f"CalDAV connection failed for {account_name}: {str(e)}"}

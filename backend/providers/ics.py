@@ -97,7 +97,11 @@ def fetch(year=None, month=None):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(req, timeout=10) as response:
-                ics_data = response.read().decode('utf-8')
+                raw_data = response.read()
+                try:
+                    ics_data = raw_data.decode('utf-8')
+                except UnicodeDecodeError:
+                    ics_data = raw_data.decode('latin-1')
 
             events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color, account_id="ics")
             meta = {
