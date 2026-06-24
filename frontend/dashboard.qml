@@ -120,6 +120,8 @@ ShellRoot {
     onCurrentViewMonthChanged: updateMonthGrid()
     onCurrentViewYearChanged: updateMonthGrid()
 
+    property var parsedConfig: ({})
+
     FileView {
         id: configFileWatcher
         path: Quickshell.env("HOME") + "/.config/waylandar/config.json"
@@ -129,12 +131,17 @@ ShellRoot {
             if (content.trim() !== "") {
                 try {
                     let cfg = JSON.parse(content);
+                    parsedConfig = cfg;
+                    
                     let states = {};
                     let providers = cfg.providers || {};
                     for (let p in providers) {
+                        let providerEnabled = providers[p].enabled !== false;
+                        states[p] = providerEnabled;
+                        
                         let accounts = providers[p].accounts || [];
                         for (let i = 0; i < accounts.length; i++) {
-                            states[accounts[i].id] = accounts[i].enabled !== false;
+                            states[accounts[i].id] = accounts[i].enabled !== false && providerEnabled;
                         }
                     }
                     localAccountStates = states;
@@ -417,6 +424,7 @@ ShellRoot {
                     selectedCalendarIds: shellRoot.selectedCalendarIds
                     isFetching: shellRoot.isFetching
                     accountStates: shellRoot.localAccountStates
+                    parsedConfig: shellRoot.parsedConfig
                     
                     onToggleCalendar: function(calendarId) {
                         let sel = Object.assign({}, shellRoot.selectedCalendarIds);

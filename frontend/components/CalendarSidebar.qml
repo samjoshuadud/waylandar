@@ -15,36 +15,89 @@ Item {
     signal toggleCalendar(string calendarId)
     signal toggleAccount(string accountId, string provider, bool enabled)
 
-    // Compute grouped accounts dynamically
+    property var parsedConfig: ({})
+
+    // Compute grouped accounts dynamically from parsedConfig
     property var groupedAccounts: {
-        let groups = {};
-        for (let i = 0; i < availableCalendars.length; i++) {
-            let cal = availableCalendars[i];
-            let accId = cal.account_id || "default";
-            let accName = cal.account_name || "Calendars";
-            
-            let provider = "google";
-            if (accId === "ics") {
-                provider = "ics";
-            } else if (accId === "vdirsyncer") {
-                provider = "vdirsyncer";
-            } else if (accName.toLowerCase().indexOf("nextcloud") !== -1) {
-                provider = "nextcloud";
-            } else if (accName.toLowerCase().indexOf("icloud") !== -1) {
-                provider = "icloud";
-            }
-            
-            if (!groups[accId]) {
-                groups[accId] = {
-                    id: accId,
-                    name: accName,
-                    provider: provider,
-                    calendars: []
-                };
-            }
-            groups[accId].calendars.push(cal);
+        let groups = [];
+        let providers = parsedConfig.providers || {};
+        
+        // 1. Google Accounts
+        let googleAccs = providers.google ? (providers.google.accounts || []) : [];
+        for (let i = 0; i < googleAccs.length; i++) {
+            let acc = googleAccs[i];
+            groups.push({
+                id: acc.id,
+                name: acc.name || ("Google - " + acc.email),
+                provider: "google",
+                enabled: acc.enabled !== false,
+                calendars: getCalendarsForAccount(acc.id)
+            });
         }
-        return Object.values(groups);
+        
+        // 2. Nextcloud Accounts
+        let ncAccs = providers.nextcloud ? (providers.nextcloud.accounts || []) : [];
+        for (let i = 0; i < ncAccs.length; i++) {
+            let acc = ncAccs[i];
+            groups.push({
+                id: acc.id,
+                name: acc.name || ("Nextcloud - " + acc.username),
+                provider: "nextcloud",
+                enabled: acc.enabled !== false,
+                calendars: getCalendarsForAccount(acc.id)
+            });
+        }
+        
+        // 3. iCloud Accounts
+        let icAccs = providers.icloud ? (providers.icloud.accounts || []) : [];
+        for (let i = 0; i < icAccs.length; i++) {
+            let acc = icAccs[i];
+            groups.push({
+                id: acc.id,
+                name: acc.name || ("iCloud - " + acc.username),
+                provider: "icloud",
+                enabled: acc.enabled !== false,
+                calendars: getCalendarsForAccount(acc.id)
+            });
+        }
+        
+        // 4. ICS Feeds (grouped under "ICS Subscriptions")
+        let icsFeeds = providers.ics ? (providers.ics.feeds || []) : [];
+        if (icsFeeds.length > 0) {
+            let icsEnabled = providers.ics.enabled !== false;
+            groups.push({
+                id: "ics",
+                name: "ICS Subscriptions",
+                provider: "ics",
+                enabled: icsEnabled,
+                calendars: getCalendarsForAccount("ics")
+            });
+        }
+        
+        // 5. Local Directories (grouped under "Local Directories")
+        let vdirDirs = providers.vdirsyncer ? (providers.vdirsyncer.directories || []) : [];
+        if (vdirDirs.length > 0) {
+            let vdirEnabled = providers.vdirsyncer.enabled !== false;
+            groups.push({
+                id: "vdirsyncer",
+                name: "Local Directories",
+                provider: "vdirsyncer",
+                enabled: vdirEnabled,
+                calendars: getCalendarsForAccount("vdirsyncer")
+            });
+        }
+        
+        return groups;
+    }
+    
+    function getCalendarsForAccount(accId) {
+        let list = [];
+        for (let i = 0; i < availableCalendars.length; i++) {
+            if (availableCalendars[i].account_id === accId) {
+                list.push(availableCalendars[i]);
+            }
+        }
+        return list;
     }
 
     Column {

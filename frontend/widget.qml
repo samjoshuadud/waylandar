@@ -123,9 +123,14 @@ ShellRoot {
                     let disabled = {};
                     let providers = cfg.providers || {};
                     for (let p in providers) {
+                        let providerEnabled = providers[p].enabled !== false;
+                        if (!providerEnabled) {
+                            disabled[p] = true;
+                        }
+                        
                         let accounts = providers[p].accounts || [];
                         for (let i = 0; i < accounts.length; i++) {
-                            if (accounts[i].enabled === false) {
+                            if (accounts[i].enabled === false || !providerEnabled) {
                                 disabled[accounts[i].id] = true;
                             }
                         }
