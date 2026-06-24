@@ -8,6 +8,7 @@ ShellRoot {
     id: shellRoot
     property var allRawEvents: []
     property var allRawCalendars: []
+    property var currentTime: new Date()
     
     property int calendarCount: {
         let count = 0;
@@ -25,7 +26,7 @@ ShellRoot {
 
     property var calendarEvents: {
         let filtered = [];
-        let now = new Date();
+        let now = currentTime;
         let todayStr = now.toDateString();
         let tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -305,6 +306,7 @@ ShellRoot {
                     repeat: true
                     onTriggered: {
                         let now = new Date();
+                        shellRoot.currentTime = now;
                         for (let i = 0; i < calendarEvents.length; i++) {
                             let event = calendarEvents[i];
                             let eventStart = new Date(event.start);
