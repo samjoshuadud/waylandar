@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2026-06-24
+
+### Added
+- Added support for multiple concurrent accounts across all calendar providers (Google, CalDAV, Apple iCloud, ICS feeds, and Local Directories).
+- Implemented a self-healing configuration schema migration that seamlessly updates older single-account configuration files (v1.2.0 and earlier) on startup.
+- Upgraded the sync daemon to process account network sync tasks in parallel using a thread pool, significantly reducing total latency.
+- Implemented zero-latency local caching of events, enabling the QML widget and dashboard to load instantly from cache on startup while updating in the background.
+- Redesigned the terminal-based setup wizard (`sync.py`) to feature an interactive main dashboard with submenus for managing each provider type, allowing users to add, remove, and toggle specific accounts or feeds.
+- Grouped calendar listings in the dashboard sidebar by account/provider with collapsible arrow sections.
+- Added a non-blocking undo toast with a 4-second delay when toggling provider or account visibility from the interface, preserving toggle state changes safely and avoiding database synchronization race conditions.
+- Integrated a compact sync status indicator ("Synced", "Syncing...", or "Error") in the dashboard sidebar header, allowing manual sync trigger on click with Matugen theme-aware hover animations.
+
+### Changed
+- Refactored backend provider modules to utilize unique UUID mappings for granular account and calendar management.
+
+### Fixed
+- Prevented system exit failures from background threads when authenticating with Google Calendar, raising an internal RuntimeError instead of calling sys.exit to keep other calendars syncing.
+- Resolved timezone rendering offsets where all-day events parsed as UTC midnight shifted by one day depending on local timezone settings.
+- Added Latin-1 character decoding fallback for non-standard or legacy ICS feed formats.
+- Enforced a default connection timeout of 10 seconds for CalDAV networking requests to prevent background sync daemon hangs.
+- Added robust cleanup filtering in the QML interface to immediately purge deleted account configurations from the active view state.
+- Enabled immediate clock-reactive QML layout and date updates on day boundaries.
+
 ## [1.2.0] - 2026-06-22
 
 ### Added
