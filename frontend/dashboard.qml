@@ -114,6 +114,9 @@ ShellRoot {
         
         selectedDateStr = "";
         isFetching = true;
+        if (typeof cacheLoader !== "undefined") {
+            cacheLoader.reload();
+        }
     }
 
     Component.onCompleted: updateMonthGrid()
@@ -156,6 +159,9 @@ ShellRoot {
         repeat: true
         onTriggered: {
             configFileWatcher.reload();
+            if (typeof cacheLoader !== "undefined") {
+                cacheLoader.reload();
+            }
         }
     }
 
@@ -194,6 +200,77 @@ ShellRoot {
         }
     }
 
+    function loadSyncData(parsedData) {
+        let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+        let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+        availableCalendars = calendars;
+        
+        let sel = Object.assign({}, selectedCalendarIds);
+        let hasSelected = false;
+        for (let i = 0; i < calendars.length; i++) {
+            if (sel[calendars[i].id]) {
+                hasSelected = true;
+                break;
+            }
+        }
+        
+        if (!hasSelected && calendars.length > 0) {
+            for (let i = 0; i < calendars.length; i++) {
+                if (calendars[i].selected !== false) {
+                    sel[calendars[i].id] = true;
+                }
+            }
+            selectedCalendarIds = sel;
+        }
+        
+        if (parsedData.error) {
+            authError = parsedData.error;
+            allEvents = [];
+            return;
+        }
+        
+        authError = "";
+        
+        let now = new Date();
+        let todayStr = now.toDateString();
+        let tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        let tomorrowStr = tomorrow.toDateString();
+
+        for (let i = 0; i < parsed.length; i++) {
+            let d = new Date(parsed[i].start);
+            let dStr = d.toDateString();
+            
+            if (dStr === todayStr) {
+                parsed[i].sectionTitle = "Today";
+            } else if (dStr === tomorrowStr) {
+                parsed[i].sectionTitle = "Tomorrow";
+            } else {
+                parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
+            }
+        }
+        
+        allEvents = parsed;
+    }
+
+    FileView {
+        id: cacheLoader
+        path: Quickshell.env("HOME") + "/.cache/waylandar/cache_" + currentViewYear + "_" + (currentViewMonth + 1) + ".json"
+        
+        onTextChanged: {
+            let content = text();
+            if (content.trim() !== "") {
+                try {
+                    let parsedData = JSON.parse(content);
+                    loadSyncData(parsedData);
+                    if (allEvents.length > 0) {
+                        isFetching = false;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
     Process {
         id: pythonScript
         command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py \"$1\" \"$2\" --background; elif command -v waylandar >/dev/null 2>&1; then waylandar \"$1\" \"$2\" --background; else echo '{\"error\": \"Backend not found\"}'; fi", "waylandar", currentViewYear.toString(), (currentViewMonth + 1).toString()]
@@ -204,58 +281,7 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsedData = JSON.parse(text);
-                    let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
-                    
-                    let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    availableCalendars = calendars;
-                    
-                    let sel = Object.assign({}, selectedCalendarIds);
-                    let hasSelected = false;
-                    for (let i = 0; i < calendars.length; i++) {
-                        if (sel[calendars[i].id]) {
-                            hasSelected = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!hasSelected && calendars.length > 0) {
-                        for (let i = 0; i < calendars.length; i++) {
-                            if (calendars[i].selected !== false) {
-                                sel[calendars[i].id] = true;
-                            }
-                        }
-                        selectedCalendarIds = sel;
-                    }
-                    
-                    if (parsedData.error) {
-                        authError = parsedData.error;
-                        allEvents = [];
-                        isFetching = false;
-                        return;
-                    }
-                    
-                    authError = "";
-                    
-                    let now = new Date();
-                    let todayStr = now.toDateString();
-                    let tomorrow = new Date(now);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    let tomorrowStr = tomorrow.toDateString();
-
-                    for (let i = 0; i < parsed.length; i++) {
-                        let d = new Date(parsed[i].start);
-                        let dStr = d.toDateString();
-                        
-                        if (dStr === todayStr) {
-                            parsed[i].sectionTitle = "Today";
-                        } else if (dStr === tomorrowStr) {
-                            parsed[i].sectionTitle = "Tomorrow";
-                        } else {
-                            parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
-                        }
-                    }
-                    
-                    allEvents = parsed;
+                    loadSyncData(parsedData);
                     isFetching = false;
                 } catch(e) {
                     console.log("Failed to parse JSON");

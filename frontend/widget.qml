@@ -146,12 +146,63 @@ ShellRoot {
         }
     }
 
+    function loadSyncData(parsedData) {
+        if (parsedData.error) {
+            authError = parsedData.error;
+            allRawEvents = [];
+            allRawCalendars = [];
+            return;
+        }
+        
+        authError = "";
+        allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+        allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+        
+        // Auto-select fallback for new providers
+        let sel = Object.assign({}, selectedCalendarIds);
+        let hasSelected = false;
+        for (let i = 0; i < allRawCalendars.length; i++) {
+            if (sel[allRawCalendars[i].id]) {
+                hasSelected = true;
+                break;
+            }
+        }
+        
+        if (!hasSelected && allRawCalendars.length > 0) {
+            for (let i = 0; i < allRawCalendars.length; i++) {
+                if (allRawCalendars[i].selected !== false) {
+                    sel[allRawCalendars[i].id] = true;
+                }
+            }
+            selectedCalendarIds = sel;
+        }
+    }
+
+    FileView {
+        id: cacheLoader
+        path: Quickshell.env("HOME") + "/.cache/waylandar/cache_current_current.json"
+        
+        onTextChanged: {
+            let content = text();
+            if (content.trim() !== "") {
+                try {
+                    let parsedData = JSON.parse(content);
+                    loadSyncData(parsedData);
+                } catch (e) {}
+            }
+        }
+    }
+
     Timer {
+        id: configReloadTimer
         interval: 1000
         running: true
         repeat: true
         onTriggered: {
             configFileWatcher.reload();
+            if (typeof cacheLoader !== "undefined") {
+                cacheLoader.reload();
+            }
         }
     }
 
@@ -166,35 +217,7 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsedData = JSON.parse(text);
-                    if (parsedData.error) {
-                        authError = parsedData.error;
-                        allRawEvents = [];
-                        allRawCalendars = [];
-                        return;
-                    }
-                    
-                    authError = "";
-                    allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
-                    allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    
-                    // Auto-select fallback for new providers
-                    let sel = Object.assign({}, selectedCalendarIds);
-                    let hasSelected = false;
-                    for (let i=0; i<allRawCalendars.length; i++) {
-                        if (sel[allRawCalendars[i].id]) {
-                            hasSelected = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!hasSelected && allRawCalendars.length > 0) {
-                        for (let i=0; i<allRawCalendars.length; i++) {
-                            if (allRawCalendars[i].selected !== false) {
-                                sel[allRawCalendars[i].id] = true;
-                            }
-                        }
-                        selectedCalendarIds = sel;
-                    }
+                    loadSyncData(parsedData);
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }

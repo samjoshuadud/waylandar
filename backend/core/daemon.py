@@ -123,4 +123,17 @@ def background_sync():
     if errors:
         output["errors"] = errors
         
+    # Save output to cache for zero-latency UI loading
+    import os
+    cache_dir = os.path.expanduser('~/.cache/waylandar')
+    os.makedirs(cache_dir, exist_ok=True)
+    y_str = str(year) if year is not None else "current"
+    m_str = str(month) if month is not None else "current"
+    cache_path = os.path.join(cache_dir, f"cache_{y_str}_{m_str}.json")
+    try:
+        with open(cache_path, 'w') as f:
+            json.dump(output, f, indent=2)
+    except Exception:
+        pass
+        
     print(json.dumps(output, indent=2))
