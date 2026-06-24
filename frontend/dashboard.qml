@@ -443,14 +443,16 @@ ShellRoot {
                 // FAR LEFT: Calendars Sidebar
                 Components.CalendarSidebar {
                     id: sidebar
-                    width: parent.contentWidth * 0.15
+                    width: parent.contentWidth * 0.20
                     height: parent.height
                     
                     availableCalendars: shellRoot.availableCalendars
                     selectedCalendarIds: shellRoot.selectedCalendarIds
                     isFetching: shellRoot.isFetching
+                    isSyncing: pythonScript.running
                     accountStates: shellRoot.localAccountStates
                     parsedConfig: shellRoot.parsedConfig
+                    authError: shellRoot.authError
                     
                     onToggleCalendar: function(calendarId) {
                         let sel = Object.assign({}, shellRoot.selectedCalendarIds);
@@ -468,13 +470,19 @@ ShellRoot {
                     onToggleAccount: function(accountId, provider, enabled) {
                         shellRoot.handleAccountToggle(accountId, provider, enabled);
                     }
+                    
+                    onSyncRequested: {
+                        if (!pythonScript.running) {
+                            pythonScript.running = true;
+                        }
+                    }
                 }
 
                 Rectangle { width: 1; height: parent.height; color: Theme.outline }
 
                 // left pane for the visual calendar grid
                 Components.CalendarGridPane {
-                    width: parent.contentWidth * 0.5
+                    width: parent.contentWidth * 0.48
                     height: parent.height
                     
                     currentViewMonth: shellRoot.currentViewMonth
@@ -510,7 +518,7 @@ ShellRoot {
 
                 // right pane for the agenda tasks
                 Components.AgendaListPane {
-                    width: parent.contentWidth * 0.35
+                    width: parent.contentWidth * 0.32
                     height: parent.height
                     
                     selectedDateStr: shellRoot.selectedDateStr

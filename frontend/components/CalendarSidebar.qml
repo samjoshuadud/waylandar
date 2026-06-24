@@ -7,6 +7,8 @@ Item {
     property var availableCalendars: []
     property var selectedCalendarIds: ({})
     property bool isFetching: false
+    property bool isSyncing: false
+    property string authError: ""
     
     // States for account collapse/expand and account toggles
     property var accountStates: ({})
@@ -14,6 +16,7 @@ Item {
     
     signal toggleCalendar(string calendarId)
     signal toggleAccount(string accountId, string provider, bool enabled)
+    signal syncRequested()
 
     property var parsedConfig: ({})
 
@@ -105,19 +108,86 @@ Item {
         anchors.margins: 20
         spacing: 20
         
-        Text {
-            id: sidebarTitle
-            text: "Calendars"
-            font.pixelSize: 24
-            font.bold: true
-            font.family: "Inter"
-            color: Theme.colorOnBackground
-        }
+        Item {
+          id: headerLayout
+          width: parent.width
+          height: 32
+
+          Text {
+              id: sidebarTitle
+              text: "Calendars"
+              font.pixelSize: 20
+              font.bold: true
+              font.family: "Inter"
+              color: Theme.colorOnBackground
+              anchors.left: parent.left
+              anchors.right: syncStatusButton.left
+              anchors.rightMargin: 8
+              anchors.verticalCenter: parent.verticalCenter
+              elide: Text.ElideRight
+          }
+
+          Rectangle {
+              id: syncStatusButton
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              height: 26
+              radius: 13
+              width: syncRow.implicitWidth + 16
+              color: syncMouse.containsMouse ? Theme.surfaceVariant : "transparent"
+
+              Behavior on color { ColorAnimation { duration: 150 } }
+
+              Row {
+                  id: syncRow
+                  anchors.centerIn: parent
+                  spacing: 6
+
+                  Text {
+                      text: "↻"
+                      font.pixelSize: 13
+                      font.family: "Inter"
+                      font.bold: true
+                      color: root.authError !== "" ? Theme.error : (root.isSyncing ? Theme.primary : Theme.colorOnSurfaceVariant)
+                      anchors.verticalCenter: parent.verticalCenter
+                      opacity: root.isSyncing || root.authError !== "" ? 1.0 : 0.6
+
+                      RotationAnimation on rotation {
+                          running: root.isSyncing
+                          loops: Animation.Infinite
+                          from: 0; to: 360
+                          duration: 1000
+                          easing.type: Easing.Linear
+                      }
+                  }
+
+                  Text {
+                      text: root.authError !== "" ? "Error" : (root.isSyncing ? "Syncing..." : "Synced")
+                      font.pixelSize: 11
+                      font.family: "Inter"
+                      font.bold: true
+                      color: root.authError !== "" ? Theme.error : (root.isSyncing ? Theme.primary : Theme.colorOnSurfaceVariant)
+                      anchors.verticalCenter: parent.verticalCenter
+                      opacity: root.isSyncing || root.authError !== "" ? 1.0 : 0.6
+                  }
+              }
+
+              MouseArea {
+                  id: syncMouse
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: root.isSyncing ? Qt.ArrowCursor : Qt.PointingHandCursor
+                  onClicked: {
+                      if (!root.isSyncing) root.syncRequested()
+                  }
+              }
+          }
+      }
         
         ListView {
             id: accountsListView
             width: parent.width
-            height: parent.height - sidebarTitle.height - cliLabel.height - 50
+            height: parent.height - headerLayout.height - cliLabel.height - 50
             model: root.groupedAccounts
             spacing: 16
             clip: true
@@ -270,31 +340,5 @@ Item {
         opacity: 0.6
         lineHeight: 1.2
     }
-    
-    // Sleek Loading Spinner
-    Rectangle {
-        anchors.centerIn: parent
-        width: 32
-        height: 32
-        color: "transparent"
-        radius: 16
-        border.color: Theme.primary
-        border.width: 3
-        visible: opacity > 0
-        opacity: root.isFetching ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
 
-        Rectangle {
-            width: 16; height: 16; 
-            color: Theme.background
-            anchors.top: parent.top; anchors.right: parent.right
-        }
-
-        RotationAnimation on rotation {
-            loops: Animation.Infinite
-            from: 0; to: 360
-            duration: 800
-            running: root.isFetching
-        }
-    }
 }
