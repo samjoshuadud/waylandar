@@ -31,7 +31,7 @@ ShellRoot {
             let calId = e.calendar_id;
             let accId = e.account_id;
             if (calId && selectedCalendarIds[calId] !== true) return false;
-            if (accId && localAccountStates[accId] === false) return false;
+            if (accId && localAccountStates[accId] !== true) return false;
             return true;
         });
         
@@ -72,7 +72,7 @@ ShellRoot {
         for (let i = 0; i < allEvents.length; i++) {
             let e = allEvents[i];
             if (e.calendar_id && !selectedCalendarIds[e.calendar_id]) continue;
-            if (e.account_id && localAccountStates[e.account_id] === false) continue;
+            if (e.account_id && localAccountStates[e.account_id] !== true) continue;
             active[new Date(e.start).toDateString()] = true;
         }
         return active;

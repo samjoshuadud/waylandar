@@ -42,7 +42,7 @@ ShellRoot {
                 continue;
             }
             
-            if (ev.account_id && disabledAccountIds[ev.account_id] === true) {
+            if (ev.account_id && enabledAccountIds[ev.account_id] !== true) {
                 continue;
             }
             
@@ -80,7 +80,7 @@ ShellRoot {
 
     property string authError: ""
     property var selectedCalendarIds: ({})
-    property var disabledAccountIds: ({})
+    property var enabledAccountIds: ({})
     property int syncInterval: 60
     property int minutesUntilSync: 60
 
@@ -120,22 +120,22 @@ ShellRoot {
                         syncInterval = cfg.sync_interval;
                     }
                     
-                    let disabled = {};
+                    let enabled = {};
                     let providers = cfg.providers || {};
                     for (let p in providers) {
                         let providerEnabled = providers[p].enabled !== false;
-                        if (!providerEnabled) {
-                            disabled[p] = true;
+                        if (providerEnabled) {
+                            enabled[p] = true;
                         }
                         
                         let accounts = providers[p].accounts || [];
                         for (let i = 0; i < accounts.length; i++) {
-                            if (accounts[i].enabled === false || !providerEnabled) {
-                                disabled[accounts[i].id] = true;
+                            if (accounts[i].enabled !== false && providerEnabled) {
+                                enabled[accounts[i].id] = true;
                             }
                         }
                     }
-                    disabledAccountIds = disabled;
+                    enabledAccountIds = enabled;
                 } catch(e) {}
             }
             if (!pythonScript.running) {
