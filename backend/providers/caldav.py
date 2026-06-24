@@ -7,7 +7,16 @@ import sys
 import icalendar
 import recurring_ical_events
 
-def setup(is_background=False, provider_key="nextcloud"):
+def setup(is_background=False, provider_key="nextcloud", url=None, username=None, password=None):
+    if url and username and password:
+        try:
+            client = caldav.DAVClient(url=url, username=username, password=password)
+            principal = client.principal()
+            principal.calendars()
+            return True
+        except Exception:
+            return False
+
     name = provider_key.capitalize()
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
     if not os.path.exists(config_path):
@@ -25,42 +34,37 @@ def setup(is_background=False, provider_key="nextcloud"):
             sys.exit(1)
         return False
 
-    nc_config = config.get("providers", {}).get(provider_key, {})
-    url = nc_config.get("url")
-    username = nc_config.get("username")
-    password = nc_config.get("password")
-
-    if not (url and username and password):
+    accounts = config.get("providers", {}).get(provider_key, {}).get("accounts", [])
+    if not accounts:
         if is_background:
-            print(json.dumps({"error": f"{name} credentials incomplete. Please run waylandar."}))
+            print(json.dumps({"error": f"No {name} accounts configured. Please run waylandar."}))
             sys.exit(1)
         return False
 
-    try:
-        client = caldav.DAVClient(url=url, username=username, password=password)
-        principal = client.principal()
-        principal.calendars()
-    except Exception as e:
-        if is_background:
-            print(json.dumps({"error": f"{name} auth failed: {str(e)}"}))
-            sys.exit(1)
-        return False
+    enabled_accounts = [a for a in accounts if a.get("enabled", True)]
+    if not enabled_accounts:
+        return True
+
+    for acc in enabled_accounts:
+        try:
+            client = caldav.DAVClient(url=acc.get("url"), username=acc.get("username"), password=acc.get("password"))
+            principal = client.principal()
+            principal.calendars()
+        except Exception as e:
+            if is_background:
+                print(json.dumps({"error": f"{name} auth failed for {acc.get('name')}: {str(e)}"}))
+                sys.exit(1)
+            return False
 
     return True
 
-def fetch(year=None, month=None, provider_key="nextcloud"):
-    config_path = os.path.expanduser('~/.config/waylandar/config.json')
-    with open(config_path, 'r') as f:
-        config = json.load(f)
+def fetch(account_id, account_name, url, username, password, year=None, month=None):
+    try:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+        principal = client.principal()
+    except Exception as e:
+        return {"events": [], "calendars": [], "error": f"CalDAV connection failed for {account_name}: {str(e)}"}
 
-    nc_config = config.get("providers", {}).get(provider_key, {})
-    url = nc_config.get("url")
-    username = nc_config.get("username")
-    password = nc_config.get("password")
-
-    client = caldav.DAVClient(url=url, username=username, password=password)
-    principal = client.principal()
-    
     if year is not None and month is not None:
         start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
         last_day = calendar.monthrange(year, month)[1]
@@ -71,18 +75,20 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
         last_day = calendar.monthrange(now.year, now.month)[1]
         end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
 
-    calendars = principal.calendars()
+    try:
+        calendars = principal.calendars()
+    except Exception as e:
+        return {"events": [], "calendars": [], "error": f"Failed to list calendars: {str(e)}"}
+        
     if not calendars:
         return {"events": [], "calendars": []}
     
     all_events = []
     all_cals_meta = []
     
-    # fallback colors if no provided colors from nextcloud
     fallback_colors = ["#4285F4", "#0F9D58", "#F4B400", "#DB4437", "#673AB7", "#00BCD4", "#FF9800", "#9C27B0"]
     
     for i, cal in enumerate(calendars):
-        # meta data extrac
         cal_id = str(cal.url)
         cal_name = cal.name if hasattr(cal, 'name') and cal.name else f"Calendar {i+1}"
         
@@ -100,15 +106,20 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
             "id": cal_id,
             "name": cal_name,
             "color": cal_color,
-            "selected": True
+            "selected": True,
+            "account_id": account_id,
+            "account_name": account_name
         })
         
         try:
             results = cal.date_search(start=start_date, end=end_date, expand=False)
-            cal_events = parse_caldav_events(results, start_date, end_date, nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color)
+            cal_events = parse_caldav_events(
+                results, start_date, end_date, 
+                nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color,
+                account_id=account_id
+            )
             all_events.extend(cal_events)
         except Exception:
-            # Skip calendars that fail or don't support date_search (like tasks) but idk man
             continue
     
     all_events.sort(key=lambda x: x["start"])
@@ -118,7 +129,7 @@ def fetch(year=None, month=None, provider_key="nextcloud"):
         "calendars": all_cals_meta
     }
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color=""):
+def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color="", account_id=""):
     output = []
     master_cal = icalendar.Calendar()
     
@@ -206,7 +217,8 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             "reminders": sorted(reminders_list),
             "calendar_id": cal_id,
             "calendar_name": cal_name,
-            "calendar_color": cal_color
+            "calendar_color": cal_color,
+            "account_id": account_id
         })
         
     return output

@@ -84,6 +84,9 @@ def fetch(year=None, month=None):
     colors = ["#9C27B0", "#E91E63", "#00BCD4", "#FF9800", "#4CAF50", "#3F51B5"]
     
     for idx, feed in enumerate(feeds):
+        if not feed.get("enabled", True):
+            continue
+            
         url = feed.get("url")
         if not url:
             continue
@@ -96,14 +99,16 @@ def fetch(year=None, month=None):
             with urllib.request.urlopen(req, timeout=10) as response:
                 ics_data = response.read().decode('utf-8')
 
-            cal_events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color)
+            cal_events = parse_caldav_events([ics_data], start_date, end_date, cal_id=url, cal_name=cal_name, cal_color=cal_color, account_id="ics")
             all_cal_events.extend(cal_events)
             
             all_cals_meta.append({
                 "id": url,
                 "name": cal_name,
                 "color": cal_color,
-                "selected": True
+                "selected": True,
+                "account_id": "ics",
+                "account_name": "ICS Subscriptions"
             })
         except Exception:
             pass

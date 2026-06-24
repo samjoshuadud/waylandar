@@ -47,6 +47,9 @@ def fetch(year=None, month=None):
     colors = ["#FF5722", "#607D8B", "#795548", "#8BC34A", "#CDDC39", "#009688"]
 
     for idx, dir_info in enumerate(directories):
+        if not dir_info.get("enabled", True):
+            continue
+            
         folder_path = os.path.expanduser(dir_info.get("path", ""))
         if not os.path.isdir(folder_path):
             continue
@@ -58,7 +61,9 @@ def fetch(year=None, month=None):
             "id": folder_path,
             "name": cal_name,
             "color": cal_color,
-            "read_only": True
+            "read_only": True,
+            "account_id": "vdirsyncer",
+            "account_name": "Local Directories"
         })
         
         ics_data_list = []
@@ -103,7 +108,8 @@ def fetch(year=None, month=None):
         if ics_data_list:
             cal_events = parse_caldav_events(
                 ics_data_list, start_date, end_date, 
-                cal_id=folder_path, cal_name=cal_name, cal_color=cal_color
+                cal_id=folder_path, cal_name=cal_name, cal_color=cal_color,
+                account_id="vdirsyncer"
             )
             all_cal_events.extend(cal_events)
 
