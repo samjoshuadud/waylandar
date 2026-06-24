@@ -3,8 +3,7 @@ import sys
 import uuid
 import getpass
 from .config import (
-    load_config, save_config, CONFIG_PATH,
-    C_HEADER, C_BLUE, C_CYAN, C_GREEN, C_WARN, C_FAIL, C_END, C_BOLD
+    load_config, save_config, C_HEADER, C_BLUE, C_CYAN, C_GREEN, C_WARN, C_FAIL, C_END, C_BOLD
 )
 
 def print_dashboard(config):
@@ -113,7 +112,7 @@ def manage_google_submenu(config):
         else:
             print("  No Google accounts configured.")
             
-        print(f"\nOptions:")
+        print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add a Google Account")
         if accounts:
             print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
@@ -170,7 +169,7 @@ def manage_nextcloud_submenu(config):
         else:
             print("  No Nextcloud accounts configured.")
             
-        print(f"\nOptions:")
+        print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add a Nextcloud Account")
         if accounts:
             print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
@@ -188,11 +187,11 @@ def manage_nextcloud_submenu(config):
             if acc_idx is not None:
                 accounts[acc_idx]["enabled"] = not accounts[acc_idx].get("enabled", True)
                 save_config(config)
-                print(f"Toggled status.")
+                print("Toggled status.")
         elif choice == 'r' and accounts:
             acc_idx = select_account_index(accounts)
             if acc_idx is not None:
-                new_name = input(f"Enter new name: ").strip()
+                new_name = input("Enter new name: ").strip()
                 if new_name:
                     accounts[acc_idx]["name"] = new_name
                     save_config(config)
@@ -220,7 +219,7 @@ def manage_icloud_submenu(config):
         else:
             print("  No iCloud accounts configured.")
             
-        print(f"\nOptions:")
+        print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add an iCloud Account")
         if accounts:
             print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
@@ -238,11 +237,11 @@ def manage_icloud_submenu(config):
             if acc_idx is not None:
                 accounts[acc_idx]["enabled"] = not accounts[acc_idx].get("enabled", True)
                 save_config(config)
-                print(f"Toggled status.")
+                print("Toggled status.")
         elif choice == 'r' and accounts:
             acc_idx = select_account_index(accounts)
             if acc_idx is not None:
-                new_name = input(f"Enter new name: ").strip()
+                new_name = input("Enter new name: ").strip()
                 if new_name:
                     accounts[acc_idx]["name"] = new_name
                     save_config(config)
@@ -273,7 +272,7 @@ def manage_ics_submenu(config):
         else:
             print("  No ICS feeds subscribed.")
             
-        print(f"\nOptions:")
+        print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add another ICS Subscription")
         if feeds:
             print(f"  {C_BOLD}[T]{C_END} Toggle feed status (Enable/Disable)")
@@ -323,7 +322,7 @@ def manage_vdirsyncer_submenu(config):
         else:
             print("  No local directories configured.")
             
-        print(f"\nOptions:")
+        print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add another Local Directory")
         if directories:
             print(f"  {C_BOLD}[T]{C_END} Toggle directory status (Enable/Disable)")

@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 
 # ANSI Color Constants
 C_HEADER = '\033[95m\033[1m'
@@ -13,7 +14,6 @@ C_BOLD = '\033[1m'
 
 CONFIG_PATH = os.path.expanduser('~/.config/waylandar/config.json')
 
-import uuid
 
 def migrate_config(data):
     modified = False
