@@ -384,19 +384,27 @@ def handle_toggle_account_cli(args):
                 found = True
                 break
     elif provider == "ics":
-        feeds = provider_config.setdefault("feeds", [])
-        for feed in feeds:
-            if feed.get("url") == account_id:
-                feed["enabled"] = enabled
-                found = True
-                break
+        if account_id == "ics":
+            provider_config["enabled"] = enabled
+            found = True
+        else:
+            feeds = provider_config.setdefault("feeds", [])
+            for feed in feeds:
+                if feed.get("url") == account_id:
+                    feed["enabled"] = enabled
+                    found = True
+                    break
     elif provider == "vdirsyncer":
-        directories = provider_config.setdefault("directories", [])
-        for directory in directories:
-            if directory.get("path") == account_id:
-                directory["enabled"] = enabled
-                found = True
-                break
+        if account_id == "vdirsyncer":
+            provider_config["enabled"] = enabled
+            found = True
+        else:
+            directories = provider_config.setdefault("directories", [])
+            for directory in directories:
+                if directory.get("path") == account_id:
+                    directory["enabled"] = enabled
+                    found = True
+                    break
                 
     if not found:
         print(f"Error: Account/Source '{account_id}' not found under provider '{provider}'", file=sys.stderr)

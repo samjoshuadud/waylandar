@@ -58,7 +58,8 @@ def background_sync():
             
     # 4. ICS Feeds
     ics_feeds = config.get("providers", {}).get("ics", {}).get("feeds", [])
-    enabled_ics = [f for f in ics_feeds if f.get("enabled", True)]
+    ics_provider_enabled = config.get("providers", {}).get("ics", {}).get("enabled", True)
+    enabled_ics = [f for f in ics_feeds if f.get("enabled", True)] if ics_provider_enabled else []
     if enabled_ics:
         from providers import ics
         def run_ics():
@@ -70,7 +71,8 @@ def background_sync():
         
     # 5. Local Directories (Vdirsyncer)
     vdir_dirs = config.get("providers", {}).get("vdirsyncer", {}).get("directories", [])
-    enabled_vdir = [d for d in vdir_dirs if d.get("enabled", True)]
+    vdir_provider_enabled = config.get("providers", {}).get("vdirsyncer", {}).get("enabled", True)
+    enabled_vdir = [d for d in vdir_dirs if d.get("enabled", True)] if vdir_provider_enabled else []
     if enabled_vdir:
         from providers import vdirsyncer
         def run_vdir():
