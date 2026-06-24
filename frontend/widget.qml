@@ -42,6 +42,10 @@ ShellRoot {
                 continue;
             }
             
+            if (ev.account_id && disabledAccountIds[ev.account_id] === true) {
+                continue;
+            }
+            
             let isAllDay = ev.start.length === 10;
             let d = new Date(ev.start);
             
@@ -76,6 +80,7 @@ ShellRoot {
 
     property string authError: ""
     property var selectedCalendarIds: ({})
+    property var disabledAccountIds: ({})
     property int syncInterval: 60
     property int minutesUntilSync: 60
 
@@ -114,6 +119,18 @@ ShellRoot {
                     if (cfg.sync_interval !== undefined && cfg.sync_interval !== syncInterval) {
                         syncInterval = cfg.sync_interval;
                     }
+                    
+                    let disabled = {};
+                    let providers = cfg.providers || {};
+                    for (let p in providers) {
+                        let accounts = providers[p].accounts || [];
+                        for (let i = 0; i < accounts.length; i++) {
+                            if (accounts[i].enabled === false) {
+                                disabled[accounts[i].id] = true;
+                            }
+                        }
+                    }
+                    disabledAccountIds = disabled;
                 } catch(e) {}
             }
             if (!pythonScript.running) {
