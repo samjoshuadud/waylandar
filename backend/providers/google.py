@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 import calendar
@@ -11,7 +10,8 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-def setup(is_background=False, force_reauth=False):
+def setup(is_background=False, force_reauth=False, account_id=None):
+    import uuid
     config_dir = os.path.expanduser('~/.config/waylandar')
     cache_dir = os.path.expanduser('~/.cache/waylandar')
     
@@ -19,8 +19,11 @@ def setup(is_background=False, force_reauth=False):
     os.makedirs(cache_dir, exist_ok=True)
     
     creds_path = os.path.join(config_dir, 'credentials.json')
-    token_path = os.path.join(cache_dir, 'token.json')
-
+    
+    if not account_id:
+        account_id = str(uuid.uuid4())
+        
+    token_path = os.path.join(cache_dir, f'token_{account_id}.json')
     creds = None
 
     backup_path = token_path + '.bak'
@@ -43,17 +46,15 @@ def setup(is_background=False, force_reauth=False):
         if not creds or not creds.valid:
             if not os.path.exists(creds_path):
                 if is_background:
-                    print(json.dumps({"error": f"Missing credentials.json at {creds_path}. Please follow the tutorial."}))
-                    sys.exit(1)
+                    raise RuntimeError(f"Missing credentials.json at {creds_path}. Please follow the tutorial.")
                 else:
                     print(f"Error: Missing credentials.json at {creds_path}.")
                     print("Please follow the README tutorial to get your API key.")
-                    return False
+                    return False, None, None
 
             if is_background:
                 error_msg = "Google Auth Required/Expired.\nPlease run this in your terminal:\n\nwaylandar\n(or 'uv run python sync.py' if installed manually)"
-                print(json.dumps({"error": error_msg}))
-                sys.exit(1)
+                raise RuntimeError(error_msg)
 
             try:
                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
@@ -72,7 +73,7 @@ def setup(is_background=False, force_reauth=False):
                 
                 if isinstance(e, KeyboardInterrupt):
                     sys.exit(1)
-                return False
+                return False, None, None
 
             if force_reauth and os.path.exists(backup_path):
                 try:
@@ -83,14 +84,31 @@ def setup(is_background=False, force_reauth=False):
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
 
-    return True
+    # Fetch primary calendar ID (which is the email address)
+    email = "Google Account"
+    try:
+        service = build('calendar', 'v3', credentials=creds)
+        primary_cal = service.calendarList().get(calendarId='primary').execute()
+        email = primary_cal.get('id', 'Google Account')
+    except Exception:
+        pass
 
-def fetch(year=None, month=None):
+    return True, account_id, email
+
+def fetch(account_id, account_name, year=None, month=None):
     cache_dir = os.path.expanduser('~/.cache/waylandar')
-    token_path = os.path.join(cache_dir, 'token.json')
+    token_path = os.path.join(cache_dir, f'token_{account_id}.json')
     
-    creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-    service = build('calendar', 'v3', credentials=creds)
+    if not os.path.exists(token_path):
+        return {"events": [], "calendars": []}
+    
+    try:
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        service = build('calendar', 'v3', credentials=creds)
+    except Exception as e:
+        return {"events": [], "calendars": [], "error": f"Google Auth Error for {account_name}: {str(e)}"}
 
     if year is not None and month is not None:
         start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
@@ -105,14 +123,16 @@ def fetch(year=None, month=None):
     timeMin = start_date.isoformat()
     timeMax = end_date.isoformat()
     
-    cals = service.calendarList().list().execute().get('items', [])
+    try:
+        cals = service.calendarList().list().execute().get('items', [])
+    except Exception as e:
+        return {"events": [], "calendars": [], "error": f"Failed to list calendars: {str(e)}"}
     
     all_events = []
     
     def callback(request_id, response, exception):
         if exception:
             return
-        # Find the calendar metadata to inject into each event
         cal_meta = next((c for c in cals if c['id'] == request_id), {})
         cal_name = cal_meta.get('summary', 'Google')
         cal_color = cal_meta.get('backgroundColor', '#4285F4')
@@ -139,19 +159,21 @@ def fetch(year=None, month=None):
                 "reminders": sorted(reminders_list),
                 "calendar_id": request_id,
                 "calendar_name": cal_name,
-                "calendar_color": cal_color
+                "calendar_color": cal_color,
+                "account_id": account_id
             })
 
     batch = service.new_batch_http_request(callback=callback)
     
     output_calendars = []
     for c in cals:
-        # Pass calendar metadata to the UI
         output_calendars.append({
             "id": c['id'],
             "name": c.get('summary', 'Google'),
             "color": c.get('backgroundColor', '#4285F4'),
-            "selected": c.get('selected', False)
+            "selected": c.get('selected', False),
+            "account_id": account_id,
+            "account_name": account_name
         })
         
         req = service.events().list(
@@ -164,9 +186,11 @@ def fetch(year=None, month=None):
         )
         batch.add(req, request_id=c['id'])
         
-    batch.execute()
-    
-    # Sort all events chronologically since they came from different calendars
+    try:
+        batch.execute()
+    except Exception:
+        pass
+        
     all_events.sort(key=lambda x: x['start'])
     
     return {

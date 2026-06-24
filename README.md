@@ -2,7 +2,7 @@
 
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland** and Sway.
 
-Officially supports **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, **ICS Feed Subscriptions**, and **Local Directories** (for parsing local `.ics` files managed by vdirsyncer, Nextcloud Client, or custom scripts).
+Officially supports configuring **multiple concurrent accounts** for all providers: **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, **ICS Feed Subscriptions**, and **Local Directories** (for parsing local `.ics` files managed by vdirsyncer, Nextcloud Client, or custom scripts).
 
 > **Note:** Waylandar is currently read-only. You can reliably view your schedule and receive background notifications, but you cannot create or edit events directly from the widget yet. Push support for event creation is planned for a future release.
 
@@ -79,7 +79,7 @@ quickshell -p frontend/widget.qml
 
 ## Configuration & Setup
 
-Waylandar includes an interactive setup wizard that allows you to easily configure your providers and switch between them.
+Waylandar includes an interactive setup wizard that allows you to easily configure multiple accounts, toggle calendar visibilities, and manage your sync preferences.
 
 Run the wizard from your terminal:
 ```bash

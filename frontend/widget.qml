@@ -8,6 +8,7 @@ ShellRoot {
     id: shellRoot
     property var allRawEvents: []
     property var allRawCalendars: []
+    property var currentTime: new Date()
     
     property int calendarCount: {
         let count = 0;
@@ -25,7 +26,7 @@ ShellRoot {
 
     property var calendarEvents: {
         let filtered = [];
-        let now = new Date();
+        let now = currentTime;
         let todayStr = now.toDateString();
         let tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -39,6 +40,10 @@ ShellRoot {
             ev.notified_for = allRawEvents[i].notified_for; // Reference the same array so timer mutations persist
             
             if (ev.calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[ev.calendar_id]) {
+                continue;
+            }
+            
+            if (ev.account_id && enabledAccountIds[ev.account_id] !== true) {
                 continue;
             }
             
@@ -76,6 +81,7 @@ ShellRoot {
 
     property string authError: ""
     property var selectedCalendarIds: ({})
+    property var enabledAccountIds: ({})
     property int syncInterval: 60
     property int minutesUntilSync: 60
 
@@ -114,6 +120,23 @@ ShellRoot {
                     if (cfg.sync_interval !== undefined && cfg.sync_interval !== syncInterval) {
                         syncInterval = cfg.sync_interval;
                     }
+                    
+                    let enabled = {};
+                    let providers = cfg.providers || {};
+                    for (let p in providers) {
+                        let providerEnabled = providers[p].enabled !== false;
+                        if (providerEnabled) {
+                            enabled[p] = true;
+                        }
+                        
+                        let accounts = providers[p].accounts || [];
+                        for (let i = 0; i < accounts.length; i++) {
+                            if (accounts[i].enabled !== false && providerEnabled) {
+                                enabled[accounts[i].id] = true;
+                            }
+                        }
+                    }
+                    enabledAccountIds = enabled;
                 } catch(e) {}
             }
             if (!pythonScript.running) {
@@ -124,12 +147,65 @@ ShellRoot {
         }
     }
 
+    function loadSyncData(parsedData) {
+        if (parsedData.error) {
+            authError = parsedData.error;
+            allRawEvents = [];
+            allRawCalendars = [];
+            return;
+        } else if (parsedData.errors && parsedData.errors.length > 0) {
+            authError = parsedData.errors.join("\n");
+        } else {
+            authError = "";
+        }
+        allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+        allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+        
+        // Auto-select fallback for new providers
+        let sel = Object.assign({}, selectedCalendarIds);
+        let hasSelected = false;
+        for (let i = 0; i < allRawCalendars.length; i++) {
+            if (sel[allRawCalendars[i].id]) {
+                hasSelected = true;
+                break;
+            }
+        }
+        
+        if (!hasSelected && allRawCalendars.length > 0) {
+            for (let i = 0; i < allRawCalendars.length; i++) {
+                if (allRawCalendars[i].selected !== false) {
+                    sel[allRawCalendars[i].id] = true;
+                }
+            }
+            selectedCalendarIds = sel;
+        }
+    }
+
+    FileView {
+        id: cacheLoader
+        path: Quickshell.env("HOME") + "/.cache/waylandar/cache_current_current.json"
+        
+        onTextChanged: {
+            let content = text();
+            if (content.trim() !== "") {
+                try {
+                    let parsedData = JSON.parse(content);
+                    loadSyncData(parsedData);
+                } catch (e) {}
+            }
+        }
+    }
+
     Timer {
+        id: configReloadTimer
         interval: 1000
         running: true
         repeat: true
         onTriggered: {
             configFileWatcher.reload();
+            if (typeof cacheLoader !== "undefined") {
+                cacheLoader.reload();
+            }
         }
     }
 
@@ -144,35 +220,7 @@ ShellRoot {
             onStreamFinished: {
                 try {
                     let parsedData = JSON.parse(text);
-                    if (parsedData.error) {
-                        authError = parsedData.error;
-                        allRawEvents = [];
-                        allRawCalendars = [];
-                        return;
-                    }
-                    
-                    authError = "";
-                    allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
-                    allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    
-                    // Auto-select fallback for new providers
-                    let sel = Object.assign({}, selectedCalendarIds);
-                    let hasSelected = false;
-                    for (let i=0; i<allRawCalendars.length; i++) {
-                        if (sel[allRawCalendars[i].id]) {
-                            hasSelected = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!hasSelected && allRawCalendars.length > 0) {
-                        for (let i=0; i<allRawCalendars.length; i++) {
-                            if (allRawCalendars[i].selected !== false) {
-                                sel[allRawCalendars[i].id] = true;
-                            }
-                        }
-                        selectedCalendarIds = sel;
-                    }
+                    loadSyncData(parsedData);
                 } catch(e) {
                     console.log("Failed to parse JSON.");
                 }
@@ -258,6 +306,7 @@ ShellRoot {
                     repeat: true
                     onTriggered: {
                         let now = new Date();
+                        shellRoot.currentTime = now;
                         for (let i = 0; i < calendarEvents.length; i++) {
                             let event = calendarEvents[i];
                             let eventStart = new Date(event.start);

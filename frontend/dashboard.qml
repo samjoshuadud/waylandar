@@ -12,12 +12,28 @@ ShellRoot {
     property int currentViewYear: new Date().getFullYear()
     property int currentViewMonth: new Date().getMonth()
     
-property var availableCalendars: []
+    property var availableCalendars: []
     property var selectedCalendarIds: ({})
+    
+    // Map account IDs to their enabled status
+    property var localAccountStates: ({})
+    
+    // Undo toast properties
+    property string pendingAccountId: ""
+    property string pendingProvider: ""
+    property string pendingAccountName: ""
+    property bool pendingState: true
+    property int undoCountdown: 4
     
     // Dynamically computes what shows up in the right pane
     property var displayedEvents: {
-        let evs = allEvents.filter(e => !e.calendar_id || selectedCalendarIds[e.calendar_id] === true);
+        let evs = allEvents.filter(function(e) {
+            let calId = e.calendar_id;
+            let accId = e.account_id;
+            if (calId && selectedCalendarIds[calId] !== true) return false;
+            if (accId && localAccountStates[accId] !== true) return false;
+            return true;
+        });
         
         if (selectedDateStr === "") {
             let now = new Date();
@@ -56,10 +72,12 @@ property var availableCalendars: []
         for (let i = 0; i < allEvents.length; i++) {
             let e = allEvents[i];
             if (e.calendar_id && !selectedCalendarIds[e.calendar_id]) continue;
+            if (e.account_id && localAccountStates[e.account_id] !== true) continue;
             active[new Date(e.start).toDateString()] = true;
         }
         return active;
     }
+    
     property var monthDays: []
     property string currentMonthStr: ""
     property string authError: ""
@@ -94,19 +112,19 @@ property var availableCalendars: []
         }
         monthDays = daysArray;
         
-        // Clear selection when changing months!
         selectedDateStr = "";
-        
-        // Trigger loading state
         isFetching = true;
+        if (typeof cacheLoader !== "undefined") {
+            cacheLoader.reload();
+        }
     }
 
     Component.onCompleted: updateMonthGrid()
+    Component.onDestruction: finalizeAccountToggle()
     onCurrentViewMonthChanged: updateMonthGrid()
     onCurrentViewYearChanged: updateMonthGrid()
 
-
-    property string activeProvider: "google" 
+    property var parsedConfig: ({})
 
     FileView {
         id: configFileWatcher
@@ -116,10 +134,21 @@ property var availableCalendars: []
             let content = configFileWatcher.text();
             if (content.trim() !== "") {
                 try {
-                    let parsed = JSON.parse(content);
-                    if (parsed.active_provider) {
-                        activeProvider = parsed.active_provider;
+                    let cfg = JSON.parse(content);
+                    parsedConfig = cfg;
+                    
+                    let states = {};
+                    let providers = cfg.providers || {};
+                    for (let p in providers) {
+                        let providerEnabled = providers[p].enabled !== false;
+                        states[p] = providerEnabled;
+                        
+                        let accounts = providers[p].accounts || [];
+                        for (let i = 0; i < accounts.length; i++) {
+                            states[accounts[i].id] = accounts[i].enabled !== false && providerEnabled;
+                        }
                     }
+                    localAccountStates = states;
                 } catch(e) {}
             }
         }
@@ -131,6 +160,9 @@ property var availableCalendars: []
         repeat: true
         onTriggered: {
             configFileWatcher.reload();
+            if (typeof cacheLoader !== "undefined") {
+                cacheLoader.reload();
+            }
         }
     }
 
@@ -169,10 +201,81 @@ property var availableCalendars: []
         }
     }
 
-    Process {
+    function loadSyncData(parsedData) {
+        let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
+        let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
+        availableCalendars = calendars;
+        
+        let sel = Object.assign({}, selectedCalendarIds);
+        let hasSelected = false;
+        for (let i = 0; i < calendars.length; i++) {
+            if (sel[calendars[i].id]) {
+                hasSelected = true;
+                break;
+            }
+        }
+        
+        if (!hasSelected && calendars.length > 0) {
+            for (let i = 0; i < calendars.length; i++) {
+                if (calendars[i].selected !== false) {
+                    sel[calendars[i].id] = true;
+                }
+            }
+            selectedCalendarIds = sel;
+        }
+        
+        if (parsedData.error) {
+            authError = parsedData.error;
+            allEvents = [];
+            return;
+        } else if (parsedData.errors && parsedData.errors.length > 0) {
+            authError = parsedData.errors.join("\n");
+        } else {
+            authError = "";
+        }
+        
+        let now = new Date();
+        let todayStr = now.toDateString();
+        let tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        let tomorrowStr = tomorrow.toDateString();
 
+        for (let i = 0; i < parsed.length; i++) {
+            let d = new Date(parsed[i].start);
+            let dStr = d.toDateString();
+            
+            if (dStr === todayStr) {
+                parsed[i].sectionTitle = "Today";
+            } else if (dStr === tomorrowStr) {
+                parsed[i].sectionTitle = "Tomorrow";
+            } else {
+                parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
+            }
+        }
+        
+        allEvents = parsed;
+    }
+
+    FileView {
+        id: cacheLoader
+        path: Quickshell.env("HOME") + "/.cache/waylandar/cache_" + currentViewYear + "_" + (currentViewMonth + 1) + ".json"
+        
+        onTextChanged: {
+            let content = text();
+            if (content.trim() !== "") {
+                try {
+                    let parsedData = JSON.parse(content);
+                    loadSyncData(parsedData);
+                    if (allEvents.length > 0) {
+                        isFetching = false;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
         id: pythonScript
-        // Pass the year and month down to python!
         command: ["sh", "-c", "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py \"$1\" \"$2\" --background; elif command -v waylandar >/dev/null 2>&1; then waylandar \"$1\" \"$2\" --background; else echo '{\"error\": \"Backend not found\"}'; fi", "waylandar", currentViewYear.toString(), (currentViewMonth + 1).toString()]
         running: true
         
@@ -181,60 +284,7 @@ property var availableCalendars: []
             onStreamFinished: {
                 try {
                     let parsedData = JSON.parse(text);
-                    let parsed = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
-                    
-let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
-                    availableCalendars = calendars;
-                    
-                    let sel = Object.assign({}, selectedCalendarIds);
-                    let hasSelected = false;
-                    for (let i=0; i<calendars.length; i++) {
-                        if (sel[calendars[i].id]) {
-                            hasSelected = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!hasSelected && calendars.length > 0) {
-                        for (let i=0; i<calendars.length; i++) {
-                            if (calendars[i].selected !== false) {
-                                sel[calendars[i].id] = true;
-                            }
-                        }
-                        selectedCalendarIds = sel;
-                    }
-                    
-                    if (parsedData.error) {
-                        authError = parsedData.error;
-                        allEvents = [];
-                        isFetching = false;
-                        return;
-                    }
-                    
-                    authError = "";
-                    
-                    let now = new Date();
-                    let todayStr = now.toDateString();
-                    let tomorrow = new Date(now);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    let tomorrowStr = tomorrow.toDateString();
-
-                    for (let i = 0; i < parsed.length; i++) {
-                        let d = new Date(parsed[i].start);
-                        let dStr = d.toDateString();
-                        
-                        if (dStr === todayStr) {
-                            parsed[i].sectionTitle = "Today";
-                        } else if (dStr === tomorrowStr) {
-                            parsed[i].sectionTitle = "Tomorrow";
-                        } else {
-                            parsed[i].sectionTitle = d.toLocaleDateString(Qt.locale("en_US"), "dddd, MMM d");
-                        }
-                    }
-                    
-                    allEvents = parsed;
-                    
-                    // Finished loading!
+                    loadSyncData(parsedData);
                     isFetching = false;
                 } catch(e) {
                     console.log("Failed to parse JSON");
@@ -242,6 +292,90 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 }
             }
         }
+    }
+
+    // Undo Toast timer and process handlers
+    Timer {
+        id: undoTimer
+        interval: 1000
+        repeat: true
+        running: false
+        onTriggered: {
+            undoCountdown--;
+            if (undoCountdown <= 0) {
+                undoTimer.stop();
+                finalizeAccountToggle();
+            }
+        }
+    }
+
+    Process {
+        id: toggleAccountProcess
+        onExited: {
+            if (!pythonScript.running) {
+                pythonScript.running = true;
+            }
+        }
+    }
+
+    function handleAccountToggle(accountId, provider, enabled) {
+        if (pendingAccountId !== "" && pendingAccountId !== accountId) {
+            finalizeAccountToggle();
+        }
+
+        let states = Object.assign({}, localAccountStates);
+        states[accountId] = enabled;
+        localAccountStates = states;
+        
+        if (!enabled) {
+            pendingAccountId = accountId;
+            pendingProvider = provider;
+            
+            let name = "Account";
+            for (let i = 0; i < availableCalendars.length; i++) {
+                if (availableCalendars[i].account_id === accountId) {
+                    name = availableCalendars[i].account_name || "Account";
+                    break;
+                }
+            }
+            pendingAccountName = name;
+            pendingState = enabled;
+            undoCountdown = 4;
+            undoTimer.restart();
+        } else {
+            if (pendingAccountId === accountId) {
+                cancelUndoToast();
+            }
+            executeAccountToggle(accountId, provider, true);
+        }
+    }
+
+    function cancelUndoToast() {
+        undoTimer.stop();
+        let states = Object.assign({}, localAccountStates);
+        states[pendingAccountId] = true;
+        localAccountStates = states;
+        
+        pendingAccountId = "";
+        pendingProvider = "";
+        pendingAccountName = "";
+    }
+
+    function finalizeAccountToggle() {
+        if (pendingAccountId !== "") {
+            executeAccountToggle(pendingAccountId, pendingProvider, pendingState);
+            pendingAccountId = "";
+            pendingProvider = "";
+            pendingAccountName = "";
+        }
+    }
+    
+    function executeAccountToggle(accountId, provider, enabled) {
+        toggleAccountProcess.command = [
+            "sh", "-c", 
+            "if [ -f backend/sync.py ]; then cd backend && uv run python sync.py toggle-account \"" + provider + "\" \"" + accountId + "\" \"" + (enabled ? "true" : "false") + "\"; elif command -v waylandar >/dev/null 2>&1; then waylandar toggle-account \"" + provider + "\" \"" + accountId + "\" \"" + (enabled ? "true" : "false") + "\"; fi"
+        ];
+        toggleAccountProcess.running = true;
     }
 
     PanelWindow {
@@ -256,24 +390,26 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
             right: true
         }
         
-        // A fully transparent window layer so Hyprland accepts the overlay
         color: "transparent"
 
-        // clicking the background closes the overlay
         MouseArea {
             anchors.fill: parent
-            onClicked: Qt.quit()
+            onClicked: {
+                finalizeAccountToggle();
+                Qt.quit();
+            }
         }
 
-        // handle escape key to close
         Item {
             focus: true
-            Keys.onEscapePressed: Qt.quit()
+            Keys.onEscapePressed: {
+                finalizeAccountToggle();
+                Qt.quit();
+            }
         }
 
-        // the main centered dashboard
         Rectangle {
-            // Reverted back to the stable fixed sizing
+            id: mainContainer
             width: 1250
             height: 700
             anchors.centerIn: parent
@@ -283,7 +419,6 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
             border.width: 1
             clip: true
 
-            // pop-in animation
             scale: 0.8
             opacity: 0.0
             
@@ -300,7 +435,6 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 easing.type: Easing.OutCubic
             }
 
-            // catch clicks so they dont pass through to the background and close the window
             MouseArea {
                 anchors.fill: parent
             }
@@ -313,16 +447,19 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                 readonly property real overhead: spacing * 4 + 1 * 2
                 readonly property real contentWidth: width - overhead
 
-
                 // FAR LEFT: Calendars Sidebar
                 Components.CalendarSidebar {
-                    width: parent.contentWidth * 0.15
+                    id: sidebar
+                    width: parent.contentWidth * 0.20
                     height: parent.height
                     
                     availableCalendars: shellRoot.availableCalendars
                     selectedCalendarIds: shellRoot.selectedCalendarIds
                     isFetching: shellRoot.isFetching
-                    activeProvider: shellRoot.activeProvider
+                    isSyncing: pythonScript.running
+                    accountStates: shellRoot.localAccountStates
+                    parsedConfig: shellRoot.parsedConfig
+                    authError: shellRoot.authError
                     
                     onToggleCalendar: function(calendarId) {
                         let sel = Object.assign({}, shellRoot.selectedCalendarIds);
@@ -336,13 +473,23 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                         saveSelectedCals.payload = JSON.stringify(sel);
                         saveDebounceTimer.restart();
                     }
+                    
+                    onToggleAccount: function(accountId, provider, enabled) {
+                        shellRoot.handleAccountToggle(accountId, provider, enabled);
+                    }
+                    
+                    onSyncRequested: {
+                        if (!pythonScript.running) {
+                            pythonScript.running = true;
+                        }
+                    }
                 }
 
                 Rectangle { width: 1; height: parent.height; color: Theme.outline }
 
                 // left pane for the visual calendar grid
                 Components.CalendarGridPane {
-                    width: parent.contentWidth * 0.5
+                    width: parent.contentWidth * 0.48
                     height: parent.height
                     
                     currentViewMonth: shellRoot.currentViewMonth
@@ -370,7 +517,6 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
                     }
                 }
 
-                // vertical divider line
                 Rectangle {
                     width: 1
                     height: parent.height
@@ -379,13 +525,63 @@ let calendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
 
                 // right pane for the agenda tasks
                 Components.AgendaListPane {
-                    width: parent.contentWidth * 0.35
+                    width: parent.contentWidth * 0.32
                     height: parent.height
                     
                     selectedDateStr: shellRoot.selectedDateStr
                     displayedEvents: shellRoot.displayedEvents
                     authError: shellRoot.authError
                     isFetching: shellRoot.isFetching
+                }
+            }
+
+            // Floating Undo Toast Overlay
+            Rectangle {
+                id: undoToast
+                width: 320
+                height: 48
+                radius: 12
+                color: Qt.rgba(Theme.surfaceVariant.r, Theme.surfaceVariant.g, Theme.surfaceVariant.b, 0.95)
+                border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.4)
+                border.width: 1
+                
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: pendingAccountId !== "" ? 20 : -60
+                
+                Behavior on anchors.bottomMargin {
+                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                }
+                
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 12
+                    
+                    Text {
+                        width: parent.width - 70
+                        text: "Disabling " + pendingAccountName + " (" + undoCountdown + "s)"
+                        color: Theme.colorOnSurface
+                        font.pixelSize: 12
+                        font.family: "Inter"
+                        elide: Text.ElideRight
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    
+                    Text {
+                        text: "Undo"
+                        color: Theme.primary
+                        font.pixelSize: 12
+                        font.bold: true
+                        font.family: "Inter"
+                        anchors.verticalCenter: parent.verticalCenter
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: shellRoot.cancelUndoToast()
+                        }
+                    }
                 }
             }
         }
