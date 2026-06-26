@@ -18,4 +18,5 @@ QtObject {
     
     property color outline: Qt.alpha("{{colors.outline.default.hex}}", 0.20)
     property color outlineVariant: Qt.alpha("{{colors.outline_variant.default.hex}}", 0.10)
+    property color error: "{{colors.error.default.hex}}"
 }

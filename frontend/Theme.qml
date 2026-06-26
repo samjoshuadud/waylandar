@@ -18,4 +18,5 @@ QtObject {
     
     property color outline: Qt.alpha("#a08c89", 0.20)
     property color outlineVariant: Qt.alpha("#534341", 0.10)
+    property color error: "#CF6679"
 }
