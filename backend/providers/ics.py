@@ -113,24 +113,39 @@ def fetch(year=None, month=None):
                 "account_name": "ICS Subscriptions"
             }
             return meta, events
-        except Exception:
-            return None
+        except Exception as e:
+            from core.errors import is_network_error
+            is_off = is_network_error(e)
+            return {
+                "error": f"ICS Feed {cal_name} failed: offline ({str(e)})" if is_off else f"ICS Feed {cal_name} failed: {str(e)}",
+                "offline": is_off,
+                "feed_url": url,
+                "name": cal_name,
+                "color": cal_color
+            }
 
     all_cal_events = []
     all_cals_meta = []
+    failed_feeds = []
 
     with ThreadPoolExecutor(max_workers=min(len(feeds), 10)) as executor:
         results = list(executor.map(fetch_feed, enumerate(feeds)))
         
     for res in results:
         if res:
-            meta, events = res
-            all_cals_meta.append(meta)
-            all_cal_events.extend(events)
+            if isinstance(res, dict) and "error" in res:
+                failed_feeds.append(res)
+            else:
+                meta, events = res
+                all_cals_meta.append(meta)
+                all_cal_events.extend(events)
             
     all_cal_events.sort(key=lambda x: x["start"])
 
-    return {
+    output = {
         "events": all_cal_events,
         "calendars": all_cals_meta
     }
+    if failed_feeds:
+        output["failed_feeds"] = failed_feeds
+    return output
