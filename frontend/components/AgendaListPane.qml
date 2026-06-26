@@ -31,6 +31,7 @@ Item {
             height: parent.height - agendaTitle.height - 20
             events: root.displayedEvents
             errorMessage: root.authError
+            isSyncing: root.isFetching
             
             // Dim the agenda list when fetching
             opacity: root.isFetching ? 0.3 : 1.0

@@ -11,6 +11,7 @@ ListView {
     // Tracks which card is currently expanded!
     property int expandedIndex: -1
     property string errorMessage: ""
+    property bool isSyncing: false
 
     delegate: CalendarCard {
         width: ListView.view.width
@@ -29,7 +30,7 @@ ListView {
     }
 
     Text {
-        visible: parent.events.length === 0 && !pythonScript.running && errorMessage === ""
+        visible: events.length === 0 && !isSyncing && errorMessage === ""
         text: "Your schedule is clear!"
         font.pixelSize: 14
         font.italic: true
@@ -40,7 +41,7 @@ ListView {
     header: Item {
         width: ListView.view.width
         height: visible ? implicitHeight : 0
-        visible: errorMessage !== "" && parent.events.length > 0
+        visible: errorMessage !== "" && events.length > 0
         implicitHeight: warningText.implicitHeight + 20
         
         Rectangle {
@@ -79,7 +80,7 @@ ListView {
     Flickable {
         anchors.fill: parent
         anchors.margins: 10
-        visible: errorMessage !== "" && parent.events.length === 0
+        visible: errorMessage !== "" && events.length === 0
         contentWidth: width
         contentHeight: errorText.implicitHeight
         clip: true

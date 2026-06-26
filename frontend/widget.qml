@@ -347,6 +347,7 @@ ShellRoot {
                         anchors.fill: parent
                         events: calendarEvents
                         errorMessage: authError
+                        isSyncing: pythonScript.running
                         
                         // Fades the list out slightly while fetching new data
                         opacity: pythonScript.running ? 0.3 : 1.0
