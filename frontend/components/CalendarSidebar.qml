@@ -112,6 +112,7 @@ Item {
           id: headerLayout
           width: parent.width
           height: 32
+          z: 10
 
           Text {
               id: sidebarTitle

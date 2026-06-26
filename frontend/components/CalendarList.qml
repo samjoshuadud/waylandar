@@ -52,27 +52,27 @@ ListView {
             border.width: 1
             radius: 6
             
-            Row {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
-                
-                Text {
-                    text: "⚠️"
-                    font.pixelSize: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                
-                Text {
-                    id: warningText
-                    width: parent.width - 30
-                    text: "Sync Alert:\n" + errorMessage
-                    font.pixelSize: 11
-                    font.family: "Inter"
-                    color: Theme.colorOnBackground
-                    wrapMode: Text.WrapAnywhere
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+            Text {
+                id: warningIcon
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                text: "⚠️"
+                font.pixelSize: 14
+            }
+            
+            Text {
+                id: warningText
+                anchors.left: warningIcon.right
+                anchors.leftMargin: 8
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Sync Alert:\n" + errorMessage
+                font.pixelSize: 11
+                font.family: "Inter"
+                color: Theme.colorOnBackground
+                wrapMode: Text.WrapAnywhere
             }
         }
     }
