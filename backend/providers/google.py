@@ -40,7 +40,10 @@ def setup(is_background=False, force_reauth=False, account_id=None):
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
-            except Exception:
+            except Exception as e:
+                from core.errors import is_network_error
+                if is_network_error(e):
+                    raise ConnectionError(f"Network unreachable: could not refresh Google credentials: {e}")
                 creds = None
         
         if not creds or not creds.valid:
@@ -105,8 +108,16 @@ def fetch(account_id, account_name, year=None, month=None):
     try:
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                from core.errors import is_network_error
+                if is_network_error(e):
+                    raise ConnectionError(f"Network unreachable: could not refresh Google credentials: {e}")
+                raise e
         service = build('calendar', 'v3', credentials=creds)
+    except ConnectionError as e:
+        raise e
     except Exception as e:
         return {"events": [], "calendars": [], "error": f"Google Auth Error for {account_name}: {str(e)}"}
 
@@ -126,6 +137,9 @@ def fetch(account_id, account_name, year=None, month=None):
     try:
         cals = service.calendarList().list().execute().get('items', [])
     except Exception as e:
+        from core.errors import is_network_error
+        if is_network_error(e):
+            raise ConnectionError(f"Network offline: failed to list calendars: {e}")
         return {"events": [], "calendars": [], "error": f"Failed to list calendars: {str(e)}"}
     
     all_events = []
@@ -188,7 +202,10 @@ def fetch(account_id, account_name, year=None, month=None):
         
     try:
         batch.execute()
-    except Exception:
+    except Exception as e:
+        from core.errors import is_network_error
+        if is_network_error(e):
+            raise ConnectionError(f"Network offline: failed to execute calendar fetch batch: {e}")
         pass
         
     all_events.sort(key=lambda x: x['start'])
