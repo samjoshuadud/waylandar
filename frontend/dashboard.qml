@@ -17,6 +17,7 @@ ShellRoot {
     
     // Map account IDs to their enabled status
     property var localAccountStates: ({})
+    property var localOverrides: ({})
     
     // Undo toast properties
     property string pendingAccountId: ""
@@ -138,6 +139,7 @@ ShellRoot {
                     parsedConfig = cfg;
                     
                     let states = {};
+                    let overrides = Object.assign({}, localOverrides);
                     let providers = cfg.providers || {};
                     for (let p in providers) {
                         let providerEnabled = providers[p].enabled !== false;
@@ -145,9 +147,21 @@ ShellRoot {
                         
                         let accounts = providers[p].accounts || [];
                         for (let i = 0; i < accounts.length; i++) {
-                            states[accounts[i].id] = accounts[i].enabled !== false && providerEnabled;
+                            let accId = accounts[i].id;
+                            let configVal = accounts[i].enabled !== false && providerEnabled;
+                            if (overrides[accId] !== undefined) {
+                                if (configVal === overrides[accId]) {
+                                    delete overrides[accId];
+                                    states[accId] = configVal;
+                                } else {
+                                    states[accId] = overrides[accId];
+                                }
+                            } else {
+                                states[accId] = configVal;
+                            }
                         }
                     }
+                    localOverrides = overrides;
                     localAccountStates = states;
                 } catch(e) {}
             }
@@ -324,6 +338,10 @@ ShellRoot {
         states[accountId] = enabled;
         localAccountStates = states;
         
+        let overrides = Object.assign({}, localOverrides);
+        overrides[accountId] = enabled;
+        localOverrides = overrides;
+        
         if (!enabled) {
             pendingAccountId = accountId;
             pendingProvider = provider;
@@ -352,6 +370,10 @@ ShellRoot {
         let states = Object.assign({}, localAccountStates);
         states[pendingAccountId] = true;
         localAccountStates = states;
+        
+        let overrides = Object.assign({}, localOverrides);
+        overrides[pendingAccountId] = true;
+        localOverrides = overrides;
         
         pendingAccountId = "";
         pendingProvider = "";
