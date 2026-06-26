@@ -47,10 +47,10 @@ ListView {
         Rectangle {
             anchors.fill: parent
             anchors.bottomMargin: 8
-            color: Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.1)
+            color: Theme.surface
             border.color: Theme.error
             border.width: 1
-            radius: 6
+            radius: 12
             
             Text {
                 id: warningIcon
@@ -71,7 +71,7 @@ ListView {
                 text: "Sync Alert:\n" + errorMessage
                 font.pixelSize: 11
                 font.family: "Inter"
-                color: Theme.colorOnBackground
+                color: Theme.colorOnSurface
                 wrapMode: Text.WrapAnywhere
             }
         }
