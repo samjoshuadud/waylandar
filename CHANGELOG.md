@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+- Centralized network error helper (`core/errors.py`) to properly classify offline connection failures.
+- Warning banner component at the top of the agenda list to alert users of offline/sync failures.
+- Hover tooltips for the sidebar sync status button to display detailed per-account errors.
+- Matugen-compatible error color token `Theme.error` across QML template and frontend theme fallbacks.
+
+### Changed
+- Refactored sync daemon to implement granular, per-account/feed recovery from previous caches on connection drops, preventing widgets from going blank.
+- Updated CalDAV, Google, and ICS providers to propagate structured connection errors instead of masking them as auth failures.
+- Aligned dashboard cache/sync error handling to keep displaying cached events.
+
+### Fixed
+- Fixed QML `TypeError` and `ReferenceError` warnings in `CalendarList.qml` by referencing properties directly and introducing a decoupled `isSyncing` flag.
+- Fixed dashboard toggle race conditions where rapid clicks were overwritten by background file reads through an optimistic `localOverrides` state map.
+- Fixed sidebar tooltip layering issues by adding `z` depth ordering to `headerLayout` in `CalendarSidebar.qml`.
+
 ## [1.3.0] - 2026-06-24
 
 ### Added
