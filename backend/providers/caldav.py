@@ -63,6 +63,9 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
         client = caldav.DAVClient(url=url, username=username, password=password, timeout=10)
         principal = client.principal()
     except Exception as e:
+        from core.errors import is_network_error
+        if is_network_error(e):
+            return {"events": [], "calendars": [], "offline": True, "error": f"CalDAV connection failed for {account_name}: offline ({str(e)})"}
         return {"events": [], "calendars": [], "error": f"CalDAV connection failed for {account_name}: {str(e)}"}
 
     if year is not None and month is not None:
@@ -78,6 +81,9 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
     try:
         calendars = principal.calendars()
     except Exception as e:
+        from core.errors import is_network_error
+        if is_network_error(e):
+            return {"events": [], "calendars": [], "offline": True, "error": f"Failed to list calendars: offline ({str(e)})"}
         return {"events": [], "calendars": [], "error": f"Failed to list calendars: {str(e)}"}
         
     if not calendars:
