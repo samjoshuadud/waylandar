@@ -181,6 +181,32 @@ Item {
                       if (!root.isSyncing) root.syncRequested()
                   }
               }
+
+              Rectangle {
+                  id: errorTooltip
+                  visible: root.authError !== "" && syncMouse.containsMouse
+                  z: 1000
+                  anchors.top: parent.bottom
+                  anchors.topMargin: 5
+                  anchors.right: parent.right
+                  width: Math.min(300, tooltipText.implicitWidth + 16)
+                  height: tooltipText.implicitHeight + 12
+                  color: Theme.surface
+                  border.color: Theme.outline
+                  border.width: 1
+                  radius: 4
+                  
+                  Text {
+                      id: tooltipText
+                      anchors.fill: parent
+                      anchors.margins: 8
+                      text: root.authError
+                      color: Theme.colorOnBackground
+                      font.pixelSize: 10
+                      font.family: "Inter"
+                      wrapMode: Text.Wrap
+                  }
+              }
           }
       }
         
