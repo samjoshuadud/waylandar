@@ -226,8 +226,7 @@ ShellRoot {
         
         if (parsedData.error) {
             authError = parsedData.error;
-            allEvents = [];
-            return;
+            if (allEvents.length === 0) return;
         } else if (parsedData.errors && parsedData.errors.length > 0) {
             authError = parsedData.errors.join("\n");
         } else {
@@ -266,9 +265,7 @@ ShellRoot {
                 try {
                     let parsedData = JSON.parse(content);
                     loadSyncData(parsedData);
-                    if (allEvents.length > 0) {
-                        isFetching = false;
-                    }
+                    isFetching = false;
                 } catch (e) {}
             }
         }
