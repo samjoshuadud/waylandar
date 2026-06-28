@@ -115,6 +115,7 @@ ShellRoot {
         
         selectedDateStr = "";
         isFetching = true;
+        authError = "";
         if (typeof cacheLoader !== "undefined") {
             cacheLoader.reload();
         }

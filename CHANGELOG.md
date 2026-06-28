@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed QML `TypeError` and `ReferenceError` warnings in `CalendarList.qml` by referencing properties directly and introducing a decoupled `isSyncing` flag.
 - Fixed dashboard toggle race conditions where rapid clicks were overwritten by background file reads through an optimistic `localOverrides` state map.
 - Fixed sidebar tooltip layering issues by adding `z` depth ordering to `headerLayout` in `CalendarSidebar.qml`.
+- Fixed temporary sync error flickering and stale error messages during month navigation by suppressing error containers while syncing and clearing auth errors on month changes.
 
 ## [1.3.0] - 2026-06-24
 

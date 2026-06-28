@@ -41,7 +41,7 @@ ListView {
     header: Item {
         width: ListView.view.width
         height: visible ? implicitHeight : 0
-        visible: errorMessage !== "" && events.length > 0
+        visible: errorMessage !== "" && events.length > 0 && !isSyncing
         implicitHeight: warningText.implicitHeight + 20
         
         Rectangle {
@@ -80,7 +80,7 @@ ListView {
     Flickable {
         anchors.fill: parent
         anchors.margins: 10
-        visible: errorMessage !== "" && events.length === 0
+        visible: errorMessage !== "" && events.length === 0 && !isSyncing
         contentWidth: width
         contentHeight: errorText.implicitHeight
         clip: true
