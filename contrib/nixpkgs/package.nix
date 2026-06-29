@@ -4,7 +4,7 @@
   fetchFromGitHub,
   python3,
   quickshell,
-  bash,
+  writeShellScript,
 }:
 
 let
@@ -17,6 +17,45 @@ let
     ps.recurring-ical-events
     ps.cryptography
   ]);
+
+  initTheme = writeShellScript "waylandar-init-theme" ''
+    share="@out@/share/waylandar"
+
+    if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then
+      cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak
+    fi
+    rm -rf ~/.config/waylandar/frontend
+    mkdir -p ~/.config/waylandar/frontend/components
+
+    ln -sfn "$share"/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
+    ln -sfn "$share"/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
+
+    if [ -f ~/.config/waylandar/Theme.qml.bak ]; then
+      mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml
+    fi
+
+    cp "$share"/theme_template.qml ~/.config/waylandar/theme_template.qml
+    chmod 644 ~/.config/waylandar/theme_template.qml
+
+    if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
+      cp "$share"/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
+      chmod 644 ~/.config/waylandar/frontend/Theme.qml
+    fi
+  '';
+
+  waylandarCli = writeShellScript "waylandar" ''
+    exec ${pythonEnv}/bin/python "@out@/share/waylandar/backend/sync.py" "$@"
+  '';
+
+  waylandarWidget = writeShellScript "waylandar-widget" ''
+    source "@out@/bin/waylandar-init-theme"
+    exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/widget.qml
+  '';
+
+  waylandarDashboard = writeShellScript "waylandar-dashboard" ''
+    source "@out@/bin/waylandar-init-theme"
+    exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/dashboard.qml
+  '';
 in
 
 stdenv.mkDerivation (finalAttrs: {
@@ -49,54 +88,13 @@ stdenv.mkDerivation (finalAttrs: {
     # Remove qmldir from installed frontend
     rm -f $out/share/waylandar/frontend/qmldir
 
-    # Python backend CLI entry point
-    cat > $out/bin/waylandar <<SCRIPT
-    #!${bash}/bin/bash
-    exec ${pythonEnv}/bin/python $out/share/waylandar/backend/sync.py "\$@"
-    SCRIPT
-    chmod +x $out/bin/waylandar
+    # Install scripts, substituting the @out@ placeholder with the real store path
+    substitute ${initTheme} $out/bin/waylandar-init-theme --subst-var-by out $out
+    substitute ${waylandarCli} $out/bin/waylandar --subst-var-by out $out
+    substitute ${waylandarWidget} $out/bin/waylandar-widget --subst-var-by out $out
+    substitute ${waylandarDashboard} $out/bin/waylandar-dashboard --subst-var-by out $out
 
-    # Theme initialization helper (sourced at launch to set up writable config dir)
-    cat > $out/bin/waylandar-init-theme <<SCRIPT
-    #!${bash}/bin/bash
-    if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then
-      cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak
-    fi
-    rm -rf ~/.config/waylandar/frontend
-    mkdir -p ~/.config/waylandar/frontend/components
-
-    ln -sfn $out/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
-    ln -sfn $out/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
-
-    if [ -f ~/.config/waylandar/Theme.qml.bak ]; then
-      mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml
-    fi
-
-    cp $out/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
-    chmod 644 ~/.config/waylandar/theme_template.qml
-
-    if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
-      cp $out/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
-      chmod 644 ~/.config/waylandar/frontend/Theme.qml
-    fi
-    SCRIPT
-    chmod +x $out/bin/waylandar-init-theme
-
-    # Widget launcher (compact desktop agenda)
-    cat > $out/bin/waylandar-widget <<SCRIPT
-    #!${bash}/bin/bash
-    source $out/bin/waylandar-init-theme
-    exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/widget.qml
-    SCRIPT
-    chmod +x $out/bin/waylandar-widget
-
-    # Dashboard launcher (full-month calendar overlay)
-    cat > $out/bin/waylandar-dashboard <<SCRIPT
-    #!${bash}/bin/bash
-    source $out/bin/waylandar-init-theme
-    exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/dashboard.qml
-    SCRIPT
-    chmod +x $out/bin/waylandar-dashboard
+    chmod +x $out/bin/waylandar-init-theme $out/bin/waylandar $out/bin/waylandar-widget $out/bin/waylandar-dashboard
 
     runHook postInstall
   '';
