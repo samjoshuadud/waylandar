@@ -21,23 +21,26 @@ Item {
         spacing: 4
         
         Text {
+            width: parent.width
             text: "Upcoming Schedule"
             font.pixelSize: 18
             font.bold: true
             font.family: "Inter"
             color: Theme.colorOnBackground
+            elide: Text.ElideRight
         }
         
         Text {
+            width: parent.width
             text: root.calendarCount > 0 ? root.calendarCount + " Active Calendars" : ""
             font.pixelSize: 12
             font.family: "Inter"
             color: Theme.tertiary
             visible: root.calendarCount > 0
+            elide: Text.ElideRight
         }
     }
 
-    // Countdown Text
     Text {
         id: countdownText
         anchors.right: syncButton.left
@@ -47,6 +50,8 @@ Item {
         font.pixelSize: 12
         font.italic: true
         color: Theme.colorOnSurfaceVariant
+        elide: Text.ElideRight
+        visible: root.width > 280
     }
 
     Rectangle {

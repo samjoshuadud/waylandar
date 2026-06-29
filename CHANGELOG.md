@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated dashboard and widget window dimensions to use relative, screen-responsive scaling with compact bounds.
 
 ### Fixed
+- Fixed text collision and overlap in `WidgetHeader.qml` on narrow screens by enforcing text truncation (`elide`) and responsive width bounds.
 - Fixed QML `TypeError` and `ReferenceError` warnings in `CalendarList.qml` by referencing properties directly and introducing a decoupled `isSyncing` flag.
 - Fixed dashboard toggle race conditions where rapid clicks were overwritten by background file reads through an optimistic `localOverrides` state map.
 - Fixed sidebar tooltip layering issues by adding `z` depth ordering to `headerLayout` in `CalendarSidebar.qml`.
