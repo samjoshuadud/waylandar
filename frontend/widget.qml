@@ -265,11 +265,10 @@ ShellRoot {
             right: 20
         }
         
-        implicitWidth: 420
+        implicitWidth: Math.max(360, Math.min(480, Screen.width * 0.22))
         property real chromeHeight: 45 + 1 + 60 + 40  
 
-        // Fixed stable sizing to prevent jumping when expanding events
-        implicitHeight: 600
+        implicitHeight: Math.max(450, Math.min(800, Screen.height * 0.65))
         color: "transparent"
         
         // The Main Background

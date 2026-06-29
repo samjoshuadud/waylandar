@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Refactored sync daemon to implement granular, per-account/feed recovery from previous caches on connection drops, preventing widgets from going blank.
 - Updated CalDAV, Google, and ICS providers to propagate structured connection errors instead of masking them as auth failures.
 - Aligned dashboard cache/sync error handling to keep displaying cached events.
+- Updated dashboard and widget window dimensions to use relative, screen-responsive scaling with compact bounds.
 
 ### Fixed
 - Fixed QML `TypeError` and `ReferenceError` warnings in `CalendarList.qml` by referencing properties directly and introducing a decoupled `isSyncing` flag.

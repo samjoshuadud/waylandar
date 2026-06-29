@@ -430,8 +430,8 @@ ShellRoot {
 
         Rectangle {
             id: mainContainer
-            width: 1250
-            height: 700
+            width: Math.max(900, Math.min(1400, parent.width * 0.85))
+            height: Math.max(550, Math.min(850, parent.height * 0.80))
             anchors.centerIn: parent
             color: Theme.background
             radius: 20
