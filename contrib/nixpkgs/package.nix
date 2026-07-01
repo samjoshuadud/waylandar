@@ -4,7 +4,7 @@
   fetchFromGitHub,
   python3,
   quickshell,
-  writeShellScript,
+  writeShellScriptBin,
 }:
 
 let
@@ -18,8 +18,8 @@ let
     ps.cryptography
   ]);
 
-  initTheme = writeShellScript "waylandar-init-theme" ''
-    share="@out@/share/waylandar"
+  initTheme = writeShellScriptBin "waylandar-init-theme" ''
+    share="$(dirname "$(dirname "$(readlink -f "''${BASH_SOURCE[0]}")")")/share/waylandar"
 
     if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then
       cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak
@@ -43,30 +43,33 @@ let
     fi
   '';
 
-  waylandarCli = writeShellScript "waylandar" ''
-    exec ${pythonEnv}/bin/python "@out@/share/waylandar/backend/sync.py" "$@"
+  waylandarCli = writeShellScriptBin "waylandar" ''
+    share="$(dirname "$(dirname "$(readlink -f "''${BASH_SOURCE[0]}")")")/share/waylandar"
+    exec ${pythonEnv}/bin/python "$share/backend/sync.py" "$@"
   '';
 
-  waylandarWidget = writeShellScript "waylandar-widget" ''
-    source "@out@/bin/waylandar-init-theme"
+  waylandarWidget = writeShellScriptBin "waylandar-widget" ''
+    binDir="$(dirname "$(readlink -f "''${BASH_SOURCE[0]}")")"
+    source "$binDir/waylandar-init-theme"
     exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/widget.qml
   '';
 
-  waylandarDashboard = writeShellScript "waylandar-dashboard" ''
-    source "@out@/bin/waylandar-init-theme"
+  waylandarDashboard = writeShellScriptBin "waylandar-dashboard" ''
+    binDir="$(dirname "$(readlink -f "''${BASH_SOURCE[0]}")")"
+    source "$binDir/waylandar-init-theme"
     exec ${quickshell}/bin/quickshell -p ~/.config/waylandar/frontend/dashboard.qml
   '';
 in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "waylandar";
-  version = "1.3.0";
+  version = "1.4.0";
 
   src = fetchFromGitHub {
     owner = "samjoshuadud";
     repo = "waylandar";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-+/zu58E7wlo9QzQlnp5D7R5plOAvc6I6785kZB1Lw+g=";
+    hash = "sha256-2Kq9HYNjfYzta9DaZqP3k2Su1g1v9rBSXlP5pIGmxPQ=";
   };
 
   strictDeps = true;
@@ -88,13 +91,11 @@ stdenv.mkDerivation (finalAttrs: {
     # Remove qmldir from installed frontend
     rm -f $out/share/waylandar/frontend/qmldir
 
-    # Install scripts, substituting the @out@ placeholder with the real store path
-    substitute ${initTheme} $out/bin/waylandar-init-theme --subst-var-by out $out
-    substitute ${waylandarCli} $out/bin/waylandar --subst-var-by out $out
-    substitute ${waylandarWidget} $out/bin/waylandar-widget --subst-var-by out $out
-    substitute ${waylandarDashboard} $out/bin/waylandar-dashboard --subst-var-by out $out
-
-    chmod +x $out/bin/waylandar-init-theme $out/bin/waylandar $out/bin/waylandar-widget $out/bin/waylandar-dashboard
+    # Install scripts
+    cp ${initTheme}/bin/waylandar-init-theme $out/bin/waylandar-init-theme
+    cp ${waylandarCli}/bin/waylandar $out/bin/waylandar
+    cp ${waylandarWidget}/bin/waylandar-widget $out/bin/waylandar-widget
+    cp ${waylandarDashboard}/bin/waylandar-dashboard $out/bin/waylandar-dashboard
 
     runHook postInstall
   '';

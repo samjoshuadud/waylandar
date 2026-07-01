@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-01
+
 ### Added
 - Centralized network error helper (`core/errors.py`) to properly classify offline connection failures.
 - Warning banner component at the top of the agenda list to alert users of offline/sync failures.
