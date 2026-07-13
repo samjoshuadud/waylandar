@@ -159,12 +159,6 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 8
                     Text {
-                        text: "󰌹" // Optional Nerd Font Link icon
-                        font.pixelSize: 14
-                        color: Theme.colorOnPrimary
-                        visible: false // Just in case they don't have nerd fonts
-                    }
-                    Text {
                         text: "Open in Browser"
                         font.pixelSize: 12
                         font.bold: true

@@ -15,7 +15,6 @@ let
     ps.caldav
     ps.icalendar
     ps.recurring-ical-events
-    ps.cryptography
   ]);
 
   initTheme = writeShellScriptBin "waylandar-init-theme" ''

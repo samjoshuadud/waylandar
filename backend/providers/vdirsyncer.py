@@ -2,28 +2,8 @@ import os
 import sys
 import json
 import datetime
-import calendar
 from .caldav import parse_caldav_events
 
-def setup(is_background=False):
-    config_path = os.path.expanduser('~/.config/waylandar/config.json')
-    if not os.path.exists(config_path):
-        if not is_background:
-            print("Config file not found.")
-            sys.exit(1)
-        return False
-        
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-        
-    vdir_config = config.get("providers", {}).get("vdirsyncer", {})
-    if not vdir_config.get("directories"):
-        if not is_background:
-            print("No vdirsyncer directories configured.")
-            sys.exit(1)
-        return False
-
-    return True
 
 def fetch(year=None, month=None):
     config_path = os.path.expanduser('~/.config/waylandar/config.json')
@@ -32,15 +12,8 @@ def fetch(year=None, month=None):
 
     directories = config.get("providers", {}).get("vdirsyncer", {}).get("directories", [])
 
-    if year is not None and month is not None:
-        start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-        last_day = calendar.monthrange(year, month)[1]
-        end_date = datetime.datetime(year, month, last_day, 23, 59, 59, tzinfo=datetime.timezone.utc)
-    else:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        last_day = calendar.monthrange(now.year, now.month)[1]
-        end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
+    from core.utils import get_month_range
+    start_date, end_date = get_month_range(year, month)
 
     all_cal_events = []
     all_cals_meta = []

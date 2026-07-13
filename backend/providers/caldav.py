@@ -1,11 +1,11 @@
 import caldav
 import datetime
-import calendar
 import json
 import os
 import sys
 import icalendar
 import recurring_ical_events
+
 
 def setup(is_background=False, provider_key="nextcloud", url=None, username=None, password=None):
     if url and username and password:
@@ -16,47 +16,7 @@ def setup(is_background=False, provider_key="nextcloud", url=None, username=None
             return True
         except Exception:
             return False
-
-    name = provider_key.capitalize()
-    config_path = os.path.expanduser('~/.config/waylandar/config.json')
-    if not os.path.exists(config_path):
-        if is_background:
-            print(json.dumps({"error": f"{name} config missing. Please run waylandar."}))
-            sys.exit(1)
-        return False
-
-    try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-    except Exception:
-        if is_background:
-            print(json.dumps({"error": "Failed to parse config.json."}))
-            sys.exit(1)
-        return False
-
-    accounts = config.get("providers", {}).get(provider_key, {}).get("accounts", [])
-    if not accounts:
-        if is_background:
-            print(json.dumps({"error": f"No {name} accounts configured. Please run waylandar."}))
-            sys.exit(1)
-        return False
-
-    enabled_accounts = [a for a in accounts if a.get("enabled", True)]
-    if not enabled_accounts:
-        return True
-
-    for acc in enabled_accounts:
-        try:
-            client = caldav.DAVClient(url=acc.get("url"), username=acc.get("username"), password=acc.get("password"), timeout=10)
-            principal = client.principal()
-            principal.calendars()
-        except Exception as e:
-            if is_background:
-                print(json.dumps({"error": f"{name} auth failed for {acc.get('name')}: {str(e)}"}))
-                sys.exit(1)
-            return False
-
-    return True
+    return False
 
 def fetch(account_id, account_name, url, username, password, year=None, month=None):
     try:
@@ -68,15 +28,8 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
             return {"events": [], "calendars": [], "offline": True, "error": f"CalDAV connection failed for {account_name}: offline ({str(e)})"}
         return {"events": [], "calendars": [], "error": f"CalDAV connection failed for {account_name}: {str(e)}"}
 
-    if year is not None and month is not None:
-        start_date = datetime.datetime(year, month, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-        last_day = calendar.monthrange(year, month)[1]
-        end_date = datetime.datetime(year, month, last_day, 23, 59, 59, tzinfo=datetime.timezone.utc)
-    else:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        last_day = calendar.monthrange(now.year, now.month)[1]
-        end_date = now.replace(day=last_day, hour=23, minute=59, second=59)
+    from core.utils import get_month_range
+    start_date, end_date = get_month_range(year, month)
 
     try:
         calendars = principal.calendars()

@@ -70,15 +70,15 @@ def interactive_wizard():
         
         choice = input(f"\n{C_BOLD}Select choice:{C_END} ").strip()
         if choice == '1':
-            manage_google_submenu(config)
+            manage_submenu(config, "google", "accounts", "Google Account", "Google Accounts", setup_google)
         elif choice == '2':
-            manage_nextcloud_submenu(config)
+            manage_submenu(config, "nextcloud", "accounts", "Nextcloud Account", "Nextcloud Accounts", setup_nextcloud)
         elif choice == '3':
-            manage_icloud_submenu(config)
+            manage_submenu(config, "icloud", "accounts", "iCloud Account", "iCloud Accounts", setup_icloud)
         elif choice == '4':
-            manage_ics_submenu(config)
+            manage_submenu(config, "ics", "feeds", "ICS Subscription", "ICS Subscriptions", setup_ics)
         elif choice == '5':
-            manage_vdirsyncer_submenu(config)
+            manage_submenu(config, "vdirsyncer", "directories", "Local Directory", "Local Directories", setup_vdirsyncer)
         elif choice == '6':
             change_sync_interval(config)
         elif choice == '7' or choice.lower() == 'q':
@@ -100,263 +100,64 @@ def select_account_index(accounts):
     print(f"{C_FAIL}Invalid selection.{C_END}")
     return None
 
-def manage_google_submenu(config):
+def manage_submenu(config, provider_key, list_key, label_singular, label_plural, setup_fn):
     while True:
-        print(f"\n{C_HEADER}--- Manage Google Accounts ---{C_END}")
-        accounts = config.setdefault("providers", {}).setdefault("google", {}).setdefault("accounts", [])
+        print(f"\n{C_HEADER}--- Manage {label_plural} ---{C_END}")
+        items = config.setdefault("providers", {}).setdefault(provider_key, {}).setdefault(list_key, [])
         
-        if accounts:
-            for i, acc in enumerate(accounts):
-                status = f"{C_GREEN}[Enabled]{C_END}" if acc.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
-                print(f"  {C_BOLD}[{i+1}]{C_END} {acc.get('name')} ({acc.get('email')}) {status}")
+        if items:
+            for i, item in enumerate(items):
+                status = f"{C_GREEN}[Enabled]{C_END}" if item.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
+                val = item.get('email') or item.get('username') or item.get('url') or item.get('path') or ''
+                if len(val) > 40:
+                    val = val[:37] + "..."
+                print(f"  {C_BOLD}[{i+1}]{C_END} {item.get('name')} ({val}) {status}")
         else:
-            print("  No Google accounts configured.")
+            print(f"  No {label_plural.lower()} configured.")
             
         print("\nOptions:")
-        print(f"  {C_BOLD}[A]{C_END} Add a Google Account")
-        if accounts:
-            print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
-            print(f"  {C_BOLD}[R]{C_END} Rename account label")
-            print(f"  {C_BOLD}[D]{C_END} Delete account")
+        print(f"  {C_BOLD}[A]{C_END} Add a {label_singular}")
+        if items:
+            print(f"  {C_BOLD}[T]{C_END} Toggle {label_singular.lower()} status (Enable/Disable)")
+            print(f"  {C_BOLD}[R]{C_END} Rename {label_singular.lower()} label")
+            print(f"  {C_BOLD}[D]{C_END} Delete {label_singular.lower()}")
         print(f"  {C_BOLD}[B]{C_END} Back to main menu")
         
         choice = input(f"\n{C_BOLD}Select option:{C_END} ").strip().lower()
         if choice == 'b':
             break
         elif choice == 'a':
-            setup_google(config)
-        elif choice == 't' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                accounts[acc_idx]["enabled"] = not accounts[acc_idx].get("enabled", True)
-                save_config(config)
-                print(f"Toggled status of {accounts[acc_idx]['name']}.")
-        elif choice == 'r' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                new_name = input(f"Enter new name for {accounts[acc_idx]['name']}: ").strip()
-                if new_name:
-                    accounts[acc_idx]["name"] = new_name
-                    save_config(config)
-                    print("Account renamed.")
-        elif choice == 'd' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                confirm = input(f"Are you sure you want to delete {accounts[acc_idx]['name']}? [y/N]: ").strip().lower()
-                if confirm == 'y':
-                    cache_dir = os.path.expanduser('~/.cache/waylandar')
-                    token_path = os.path.join(cache_dir, f"token_{accounts[acc_idx]['id']}.json")
-                    if os.path.exists(token_path):
-                        try:
-                            os.remove(token_path)
-                        except OSError:
-                            pass
-                    del accounts[acc_idx]
-                    save_config(config)
-                    print("Account deleted.")
-        else:
-            print(f"{C_FAIL}Invalid option.{C_END}")
-
-def manage_nextcloud_submenu(config):
-    while True:
-        print(f"\n{C_HEADER}--- Manage Nextcloud Accounts ---{C_END}")
-        accounts = config.setdefault("providers", {}).setdefault("nextcloud", {}).setdefault("accounts", [])
-        
-        if accounts:
-            for i, acc in enumerate(accounts):
-                status = f"{C_GREEN}[Enabled]{C_END}" if acc.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
-                print(f"  {C_BOLD}[{i+1}]{C_END} {acc.get('name')} ({acc.get('username')}) {status}")
-        else:
-            print("  No Nextcloud accounts configured.")
-            
-        print("\nOptions:")
-        print(f"  {C_BOLD}[A]{C_END} Add a Nextcloud Account")
-        if accounts:
-            print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
-            print(f"  {C_BOLD}[R]{C_END} Rename account label")
-            print(f"  {C_BOLD}[D]{C_END} Delete account")
-        print(f"  {C_BOLD}[B]{C_END} Back to main menu")
-        
-        choice = input(f"\n{C_BOLD}Select option:{C_END} ").strip().lower()
-        if choice == 'b':
-            break
-        elif choice == 'a':
-            setup_nextcloud(config)
-        elif choice == 't' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                accounts[acc_idx]["enabled"] = not accounts[acc_idx].get("enabled", True)
+            setup_fn(config)
+        elif choice == 't' and items:
+            idx = select_account_index(items)
+            if idx is not None:
+                items[idx]["enabled"] = not items[idx].get("enabled", True)
                 save_config(config)
                 print("Toggled status.")
-        elif choice == 'r' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
+        elif choice == 'r' and items:
+            idx = select_account_index(items)
+            if idx is not None:
                 new_name = input("Enter new name: ").strip()
                 if new_name:
-                    accounts[acc_idx]["name"] = new_name
+                    items[idx]["name"] = new_name
                     save_config(config)
-                    print("Account renamed.")
-        elif choice == 'd' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                confirm = input(f"Are you sure you want to delete {accounts[acc_idx]['name']}? [y/N]: ").strip().lower()
+                    print("Renamed.")
+        elif choice == 'd' and items:
+            idx = select_account_index(items)
+            if idx is not None:
+                confirm = input(f"Are you sure you want to delete {items[idx]['name']}? [y/N]: ").strip().lower()
                 if confirm == 'y':
-                    del accounts[acc_idx]
+                    if provider_key == 'google':
+                        cache_dir = os.path.expanduser('~/.cache/waylandar')
+                        token_path = os.path.join(cache_dir, f"token_{items[idx]['id']}.json")
+                        if os.path.exists(token_path):
+                            try:
+                                os.remove(token_path)
+                            except OSError:
+                                pass
+                    del items[idx]
                     save_config(config)
-                    print("Account deleted.")
-        else:
-            print(f"{C_FAIL}Invalid option.{C_END}")
-
-def manage_icloud_submenu(config):
-    while True:
-        print(f"\n{C_HEADER}--- Manage iCloud Accounts ---{C_END}")
-        accounts = config.setdefault("providers", {}).setdefault("icloud", {}).setdefault("accounts", [])
-        
-        if accounts:
-            for i, acc in enumerate(accounts):
-                status = f"{C_GREEN}[Enabled]{C_END}" if acc.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
-                print(f"  {C_BOLD}[{i+1}]{C_END} {acc.get('name')} ({acc.get('username')}) {status}")
-        else:
-            print("  No iCloud accounts configured.")
-            
-        print("\nOptions:")
-        print(f"  {C_BOLD}[A]{C_END} Add an iCloud Account")
-        if accounts:
-            print(f"  {C_BOLD}[T]{C_END} Toggle account status (Enable/Disable)")
-            print(f"  {C_BOLD}[R]{C_END} Rename account label")
-            print(f"  {C_BOLD}[D]{C_END} Delete account")
-        print(f"  {C_BOLD}[B]{C_END} Back to main menu")
-        
-        choice = input(f"\n{C_BOLD}Select option:{C_END} ").strip().lower()
-        if choice == 'b':
-            break
-        elif choice == 'a':
-            setup_icloud(config)
-        elif choice == 't' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                accounts[acc_idx]["enabled"] = not accounts[acc_idx].get("enabled", True)
-                save_config(config)
-                print("Toggled status.")
-        elif choice == 'r' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                new_name = input("Enter new name: ").strip()
-                if new_name:
-                    accounts[acc_idx]["name"] = new_name
-                    save_config(config)
-                    print("Account renamed.")
-        elif choice == 'd' and accounts:
-            acc_idx = select_account_index(accounts)
-            if acc_idx is not None:
-                confirm = input(f"Are you sure you want to delete {accounts[acc_idx]['name']}? [y/N]: ").strip().lower()
-                if confirm == 'y':
-                    del accounts[acc_idx]
-                    save_config(config)
-                    print("Account deleted.")
-        else:
-            print(f"{C_FAIL}Invalid option.{C_END}")
-
-def manage_ics_submenu(config):
-    while True:
-        print(f"\n{C_HEADER}--- Manage ICS Subscriptions ---{C_END}")
-        feeds = config.setdefault("providers", {}).setdefault("ics", {}).setdefault("feeds", [])
-        
-        if feeds:
-            for i, feed in enumerate(feeds):
-                status = f"{C_GREEN}[Enabled]{C_END}" if feed.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
-                url_trunc = feed.get('url', '')
-                if len(url_trunc) > 40:
-                    url_trunc = url_trunc[:37] + "..."
-                print(f"  {C_BOLD}[{i+1}]{C_END} {feed.get('name')} ({url_trunc}) {status}")
-        else:
-            print("  No ICS feeds subscribed.")
-            
-        print("\nOptions:")
-        print(f"  {C_BOLD}[A]{C_END} Add another ICS Subscription")
-        if feeds:
-            print(f"  {C_BOLD}[T]{C_END} Toggle feed status (Enable/Disable)")
-            print(f"  {C_BOLD}[R]{C_END} Rename feed label")
-            print(f"  {C_BOLD}[D]{C_END} Delete feed subscription")
-        print(f"  {C_BOLD}[B]{C_END} Back to main menu")
-        
-        choice = input(f"\n{C_BOLD}Select option:{C_END} ").strip().lower()
-        if choice == 'b':
-            break
-        elif choice == 'a':
-            setup_ics(config)
-        elif choice == 't' and feeds:
-            feed_idx = select_account_index(feeds)
-            if feed_idx is not None:
-                feeds[feed_idx]["enabled"] = not feeds[feed_idx].get("enabled", True)
-                save_config(config)
-                print("Toggled status.")
-        elif choice == 'r' and feeds:
-            feed_idx = select_account_index(feeds)
-            if feed_idx is not None:
-                new_name = input("Enter new name: ").strip()
-                if new_name:
-                    feeds[feed_idx]["name"] = new_name
-                    save_config(config)
-                    print("Feed renamed.")
-        elif choice == 'd' and feeds:
-            feed_idx = select_account_index(feeds)
-            if feed_idx is not None:
-                confirm = input(f"Are you sure you want to delete {feeds[feed_idx]['name']}? [y/N]: ").strip().lower()
-                if confirm == 'y':
-                    del feeds[feed_idx]
-                    save_config(config)
-                    print("Feed deleted.")
-        else:
-            print(f"{C_FAIL}Invalid option.{C_END}")
-
-def manage_vdirsyncer_submenu(config):
-    while True:
-        print(f"\n{C_HEADER}--- Manage Local Directories ---{C_END}")
-        directories = config.setdefault("providers", {}).setdefault("vdirsyncer", {}).setdefault("directories", [])
-        
-        if directories:
-            for i, directory in enumerate(directories):
-                status = f"{C_GREEN}[Enabled]{C_END}" if directory.get("enabled", True) else f"{C_WARN}[Disabled]{C_END}"
-                print(f"  {C_BOLD}[{i+1}]{C_END} {directory.get('name')} ({directory.get('path')}) {status}")
-        else:
-            print("  No local directories configured.")
-            
-        print("\nOptions:")
-        print(f"  {C_BOLD}[A]{C_END} Add another Local Directory")
-        if directories:
-            print(f"  {C_BOLD}[T]{C_END} Toggle directory status (Enable/Disable)")
-            print(f"  {C_BOLD}[R]{C_END} Rename directory label")
-            print(f"  {C_BOLD}[D]{C_END} Delete directory config")
-        print(f"  {C_BOLD}[B]{C_END} Back to main menu")
-        
-        choice = input(f"\n{C_BOLD}Select option:{C_END} ").strip().lower()
-        if choice == 'b':
-            break
-        elif choice == 'a':
-            setup_vdirsyncer(config)
-        elif choice == 't' and directories:
-            dir_idx = select_account_index(directories)
-            if dir_idx is not None:
-                directories[dir_idx]["enabled"] = not directories[dir_idx].get("enabled", True)
-                save_config(config)
-                print("Toggled status.")
-        elif choice == 'r' and directories:
-            dir_idx = select_account_index(directories)
-            if dir_idx is not None:
-                new_name = input("Enter new name: ").strip()
-                if new_name:
-                    directories[dir_idx]["name"] = new_name
-                    save_config(config)
-                    print("Directory renamed.")
-        elif choice == 'd' and directories:
-            dir_idx = select_account_index(directories)
-            if dir_idx is not None:
-                confirm = input(f"Are you sure you want to delete {directories[dir_idx]['name']}? [y/N]: ").strip().lower()
-                if confirm == 'y':
-                    del directories[dir_idx]
-                    save_config(config)
-                    print("Directory configuration deleted.")
+                    print("Deleted.")
         else:
             print(f"{C_FAIL}Invalid option.{C_END}")
 
@@ -413,7 +214,7 @@ def handle_toggle_account_cli(args):
     print(f"Success: Toggled account '{account_id}' to enabled={enabled}")
     sys.exit(0)
 
-def setup_google(config, first_run=False, force_reauth=False):
+def setup_google(config, force_reauth=False):
     from providers import google
     print("\nStarting Google Calendar Setup...")
     success, acc_id, email = google.setup(is_background=False, force_reauth=force_reauth)
@@ -449,13 +250,10 @@ def setup_google(config, first_run=False, force_reauth=False):
             
         save_config(config)
         print("\nSuccessfully authenticated with Google Calendar!")
-        if first_run:
-            print("You can now safely close this terminal and use the Waylandar widget.")
-            sys.exit(0)
     else:
         print("\nGoogle Calendar setup failed.")
 
-def setup_nextcloud(config, first_run=False):
+def setup_nextcloud(config):
     print("\nStarting Nextcloud Calendar Setup...")
     try:
         url = input("Enter Nextcloud CalDAV URL (e.g. https://domain.com/remote.php/dav): ").strip()
@@ -482,15 +280,12 @@ def setup_nextcloud(config, first_run=False):
             })
             save_config(config)
             print("\nSuccessfully authenticated and added Nextcloud account!")
-            if first_run:
-                print("You can now safely close this terminal and use the Waylandar widget.")
-                sys.exit(0)
         else:
             print("\nNextcloud Calendar connection failed. Please check your credentials.")
     except (KeyboardInterrupt, EOFError):
         print("\n\nSetup cancelled.")
 
-def setup_icloud(config, first_run=False):
+def setup_icloud(config):
     print("\nStarting Apple iCloud Setup...")
     print("Note: You MUST use an App-Specific Password generated from your Apple ID settings, NOT your main password.")
     try:
@@ -518,15 +313,12 @@ def setup_icloud(config, first_run=False):
             })
             save_config(config)
             print("\nSuccessfully authenticated and added Apple iCloud account!")
-            if first_run:
-                print("You can now safely close this terminal and use the Waylandar widget.")
-                sys.exit(0)
         else:
             print("\niCloud setup failed. Make sure you are using an App-Specific Password!")
     except (KeyboardInterrupt, EOFError):
         print("\n\nSetup cancelled.")
 
-def setup_ics(config, first_run=False):
+def setup_ics(config):
     print(f"\n{C_HEADER}Starting ICS Subscription Setup...{C_END}")
     print(f"{C_BLUE}Note: ICS links are read-only and usually start with http:// or webcal://{C_END}")
     try:
@@ -555,7 +347,7 @@ def setup_ics(config, first_run=False):
     except (KeyboardInterrupt, EOFError):
         print("\n\nSetup cancelled.")
 
-def setup_vdirsyncer(config, first_run=False):
+def setup_vdirsyncer(config):
     print(f"\n{C_HEADER}Starting Local Directory Setup...{C_END}")
     print(f"{C_BLUE}Provide the path to a local directory containing your .ics files.{C_END}")
     try:

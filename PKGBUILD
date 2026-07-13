@@ -14,7 +14,6 @@ depends=(
     'python-caldav'
     'python-icalendar'
     'python-recurring-ical-events'
-    'python-cryptography'
 )
 makedepends=('git')
 provides=('waylandar')
@@ -46,7 +45,7 @@ package() {
 exec /usr/bin/python3 /usr/share/waylandar/backend/sync.py "\$@"
 EOF
 
-  cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
+  cat > "$pkgdir/usr/bin/waylandar-init-theme" <<EOF
 #!/bin/bash
 if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
 rm -rf ~/.config/waylandar/frontend
@@ -62,28 +61,20 @@ if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
   cp /usr/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
   chmod 644 ~/.config/waylandar/frontend/Theme.qml
 fi
+EOF
+
+  cat > "$pkgdir/usr/bin/waylandar-widget" <<EOF
+#!/bin/bash
+source /usr/bin/waylandar-init-theme
 exec quickshell -p ~/.config/waylandar/frontend/widget.qml
 EOF
 
   cat > "$pkgdir/usr/bin/waylandar-dashboard" <<EOF
 #!/bin/bash
-if [ -f ~/.config/waylandar/frontend/Theme.qml ]; then cp ~/.config/waylandar/frontend/Theme.qml ~/.config/waylandar/Theme.qml.bak; fi
-rm -rf ~/.config/waylandar/frontend
-mkdir -p ~/.config/waylandar/frontend/components
-
-ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev/null || true
-ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
-
-if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
-cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
-chmod 644 ~/.config/waylandar/theme_template.qml
-if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
-  cp /usr/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
-  chmod 644 ~/.config/waylandar/frontend/Theme.qml
-fi
+source /usr/bin/waylandar-init-theme
 exec quickshell -p ~/.config/waylandar/frontend/dashboard.qml
 EOF
 
   # Make all wrappers executable
-  chmod +x "$pkgdir/usr/bin/waylandar" "$pkgdir/usr/bin/waylandar-widget" "$pkgdir/usr/bin/waylandar-dashboard"
+  chmod +x "$pkgdir/usr/bin/waylandar" "$pkgdir/usr/bin/waylandar-init-theme" "$pkgdir/usr/bin/waylandar-widget" "$pkgdir/usr/bin/waylandar-dashboard"
 }
