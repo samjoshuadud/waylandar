@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import datetime
 from .caldav import parse_caldav_events
 
 

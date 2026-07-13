@@ -1,8 +1,5 @@
 import caldav
 import datetime
-import json
-import os
-import sys
 import icalendar
 import recurring_ical_events
 

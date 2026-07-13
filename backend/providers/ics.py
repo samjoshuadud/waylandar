@@ -1,7 +1,5 @@
 import json
 import os
-import sys
-import datetime
 import urllib.request
 from providers.caldav import parse_caldav_events
 
