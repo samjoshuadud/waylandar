@@ -1,5 +1,7 @@
 # Waylandar
 
+[![GitHub Stars](https://img.shields.io/github/stars/samjoshuadud/waylandar?style=flat-square)](https://github.com/samjoshuadud/waylandar/stargazers)
+
 A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland** and Sway.
 
 Officially supports configuring **multiple concurrent accounts** for all providers: **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, **ICS Feed Subscriptions**, and **Local Directories** (for parsing local `.ics` files managed by vdirsyncer, Nextcloud Client, or custom scripts).
