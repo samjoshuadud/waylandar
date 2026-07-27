@@ -1,10 +1,17 @@
-import caldav
 import datetime
+
+import caldav
 import icalendar
 import recurring_ical_events
 
 
-def setup(is_background=False, provider_key="nextcloud", url=None, username=None, password=None):
+def setup(
+    is_background=False,
+    provider_key="nextcloud",
+    url=None,
+    username=None,
+    password=None,
+):
     if url and username and password:
         try:
             client = caldav.DAVClient(url=url, username=username, password=password, timeout=10)
@@ -15,45 +22,76 @@ def setup(is_background=False, provider_key="nextcloud", url=None, username=None
             return False
     return False
 
+
 def fetch(account_id, account_name, url, username, password, year=None, month=None):
     try:
         client = caldav.DAVClient(url=url, username=username, password=password, timeout=10)
         principal = client.principal()
     except Exception as e:
         from core.errors import is_network_error
+
         if is_network_error(e):
-            return {"events": [], "calendars": [], "offline": True, "error": f"CalDAV connection failed for {account_name}: offline ({str(e)})"}
-        return {"events": [], "calendars": [], "error": f"CalDAV connection failed for {account_name}: {str(e)}"}
+            return {
+                "events": [],
+                "calendars": [],
+                "offline": True,
+                "error": f"CalDAV connection failed for {account_name}: offline ({e!s})",
+            }
+        return {
+            "events": [],
+            "calendars": [],
+            "error": f"CalDAV connection failed for {account_name}: {e!s}",
+        }
 
     from core.utils import get_month_range
+
     start_date, end_date = get_month_range(year, month)
 
     try:
         calendars = principal.calendars()
     except Exception as e:
         from core.errors import is_network_error
+
         if is_network_error(e):
-            return {"events": [], "calendars": [], "offline": True, "error": f"Failed to list calendars: offline ({str(e)})"}
-        return {"events": [], "calendars": [], "error": f"Failed to list calendars: {str(e)}"}
-        
+            return {
+                "events": [],
+                "calendars": [],
+                "offline": True,
+                "error": f"Failed to list calendars: offline ({e!s})",
+            }
+        return {
+            "events": [],
+            "calendars": [],
+            "error": f"Failed to list calendars: {e!s}",
+        }
+
     if not calendars:
         return {"events": [], "calendars": []}
-    
+
     from concurrent.futures import ThreadPoolExecutor
 
-    fallback_colors = ["#4285F4", "#0F9D58", "#F4B400", "#DB4437", "#673AB7", "#00BCD4", "#FF9800", "#9C27B0"]
-    
+    fallback_colors = [
+        "#4285F4",
+        "#0F9D58",
+        "#F4B400",
+        "#DB4437",
+        "#673AB7",
+        "#00BCD4",
+        "#FF9800",
+        "#9C27B0",
+    ]
+
     def fetch_cal_data(item):
         i, cal = item
         cal_id = str(cal.url)
-        cal_name = cal.name if hasattr(cal, 'name') and cal.name else f"Calendar {i+1}"
-        
+        cal_name = cal.name if hasattr(cal, "name") and cal.name else f"Calendar {i + 1}"
+
         cal_color = fallback_colors[i % len(fallback_colors)]
         try:
-            props = cal.get_properties(['{http://apple.com/ns/ical/}calendar-color'])
-            if props and '{http://apple.com/ns/ical/}calendar-color' in props:
-                cal_color = props['{http://apple.com/ns/ical/}calendar-color']
-                if cal_color and len(cal_color) == 9 and cal_color.startswith('#'):
+            props = cal.get_properties(["{http://apple.com/ns/ical/}calendar-color"])
+            if props and "{http://apple.com/ns/ical/}calendar-color" in props:
+                cal_color = props["{http://apple.com/ns/ical/}calendar-color"]
+                if cal_color and len(cal_color) == 9 and cal_color.startswith("#"):
                     cal_color = cal_color[:7]
         except Exception:
             pass
@@ -64,20 +102,25 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
             "color": cal_color,
             "selected": True,
             "account_id": account_id,
-            "account_name": account_name
+            "account_name": account_name,
         }
-        
+
         events = []
         try:
             results = cal.date_search(start=start_date, end=end_date, expand=False)
             events = parse_caldav_events(
-                results, start_date, end_date, 
-                nc_url=url, cal_id=cal_id, cal_name=cal_name, cal_color=cal_color,
-                account_id=account_id
+                results,
+                start_date,
+                end_date,
+                nc_url=url,
+                cal_id=cal_id,
+                cal_name=cal_name,
+                cal_color=cal_color,
+                account_id=account_id,
             )
         except Exception:
             pass
-            
+
         return meta, events
 
     all_events = []
@@ -85,39 +128,45 @@ def fetch(account_id, account_name, url, username, password, year=None, month=No
 
     with ThreadPoolExecutor(max_workers=min(len(calendars), 10)) as executor:
         results = list(executor.map(fetch_cal_data, enumerate(calendars)))
-        
+
     for meta, events in results:
         all_cals_meta.append(meta)
         all_events.extend(events)
-    
+
     all_events.sort(key=lambda x: x["start"])
-    
-    return {
-        "events": all_events,
-        "calendars": all_cals_meta
-    }
+
+    return {"events": all_events, "calendars": all_cals_meta}
 
 
-def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_url="", cal_id="", cal_name="", cal_color="", account_id=""):
+def parse_caldav_events(
+    caldav_events_or_ics_strings,
+    start_date,
+    end_date,
+    nc_url="",
+    cal_id="",
+    cal_name="",
+    cal_color="",
+    account_id="",
+):
     output = []
     master_cal = icalendar.Calendar()
-    
+
     # Generate fallback calendar link from the CalDAV URL
     fallback_link = ""
     if nc_url:
         if "icloud.com" in nc_url:
             fallback_link = "https://www.icloud.com/calendar/"
         elif "/remote.php" in nc_url:
-            fallback_link = nc_url.split('/remote.php')[0] + "/apps/calendar/"
+            fallback_link = nc_url.split("/remote.php")[0] + "/apps/calendar/"
         else:
             fallback_link = nc_url
-    
+
     for ev in caldav_events_or_ics_strings:
         if isinstance(ev, str):
             ics_data = ev
         else:
             ics_data = ev.data
-            
+
         try:
             cal = icalendar.Calendar.from_ical(ics_data)
             for component in cal.walk():
@@ -127,36 +176,36 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
             pass
 
     events = recurring_ical_events.of(master_cal).between(start_date, end_date)
-    
+
     for event in events:
-        summary = str(event.get('SUMMARY', 'Busy'))
-        description = str(event.get('DESCRIPTION', ''))
-        
+        summary = str(event.get("SUMMARY", "Busy"))
+        description = str(event.get("DESCRIPTION", ""))
+
         # Use event URL if exists, otherwise fallback to the Nextcloud Calendar web UI
-        url = str(event.get('URL', ''))
+        url = str(event.get("URL", ""))
         if not url or url == "None":
             url = fallback_link
-        
-        dtstart = event.get('DTSTART')
-        dtend = event.get('DTEND')
-        
+
+        dtstart = event.get("DTSTART")
+        dtend = event.get("DTEND")
+
         if not dtstart:
             continue
-            
+
         start_val = dtstart.dt
         start_iso = start_val.isoformat()
-            
+
         if dtend:
             end_val = dtend.dt
             end_iso = end_val.isoformat()
         else:
             end_iso = start_iso
-            
+
         reminders_list = []
-        
+
         for component in event.walk():
             if component.name == "VALARM":
-                trigger = component.get('TRIGGER')
+                trigger = component.get("TRIGGER")
                 if trigger:
                     td = trigger.dt
                     if isinstance(td, datetime.timedelta):
@@ -171,23 +220,25 @@ def parse_caldav_events(caldav_events_or_ics_strings, start_date, end_date, nc_u
                             td = td.replace(tzinfo=datetime.timezone.utc)
                         elif s_val.tzinfo is None and td.tzinfo is not None:
                             s_val = s_val.replace(tzinfo=datetime.timezone.utc)
-                            
+
                         diff = s_val - td
                         minutes_before = int(diff.total_seconds() / 60)
                         if minutes_before >= 0:
                             reminders_list.append(minutes_before)
-            
-        output.append({
-            "title": summary,
-            "description": description,
-            "start": start_iso,
-            "end": end_iso,
-            "link": url,
-            "reminders": sorted(reminders_list),
-            "calendar_id": cal_id,
-            "calendar_name": cal_name,
-            "calendar_color": cal_color,
-            "account_id": account_id
-        })
-        
+
+        output.append(
+            {
+                "title": summary,
+                "description": description,
+                "start": start_iso,
+                "end": end_iso,
+                "link": url,
+                "reminders": sorted(reminders_list),
+                "calendar_id": cal_id,
+                "calendar_name": cal_name,
+                "calendar_color": cal_color,
+                "account_id": account_id,
+            }
+        )
+
     return output
