@@ -136,6 +136,8 @@ Rectangle {
                 font.family: "Inter"
                 font.bold: true
                 color: Theme.tertiary
+                width: parent.width
+                wrapMode: Text.WordWrap
             }
 
             Text {

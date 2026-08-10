@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed reminder text in `CalendarCard.qml` overflowing its parent container when multiple reminders are set. Text now wraps correctly within the card bounds.
+
+
 ## [1.4.0] - 2026-07-01
 
 ### Added
