@@ -85,6 +85,24 @@ ShellRoot {
     property int syncInterval: 60
     property int minutesUntilSync: 60
 
+    property string displayMode: "all"
+    property int targetScreenIndex: 0
+
+    property var displayScreens: {
+        let screens = Quickshell.screens;
+        if (!screens || screens.length === 0) return [];
+        if (displayMode === "primary") {
+            return [screens[0]];
+        } else if (displayMode === "specific") {
+            let idx = targetScreenIndex;
+            if (idx >= 0 && idx < screens.length) {
+                return [screens[idx]];
+            }
+            return [screens[0]];
+        }
+        return screens;
+    }
+
     FileView {
         id: selectedCalsFile
         path: Quickshell.env("HOME") + "/.cache/waylandar/selected_cals.json"
@@ -119,6 +137,12 @@ ShellRoot {
                     let cfg = JSON.parse(content);
                     if (cfg.sync_interval !== undefined && cfg.sync_interval !== syncInterval) {
                         syncInterval = cfg.sync_interval;
+                    }
+                    if (cfg.display_mode !== undefined) {
+                        displayMode = cfg.display_mode;
+                    }
+                    if (cfg.target_screen_index !== undefined) {
+                        targetScreenIndex = cfg.target_screen_index;
                     }
                     
                     let enabled = {};
@@ -285,7 +309,7 @@ ShellRoot {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: shellRoot.displayScreens
 
         PanelWindow {
             required property var modelData

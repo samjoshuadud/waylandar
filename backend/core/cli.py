@@ -78,7 +78,8 @@ def interactive_wizard():
         print(f"  {C_BOLD}[4]{C_END} ICS Subscriptions")
         print(f"  {C_BOLD}[5]{C_END} Local Directories (.ics files)")
         print(f"  {C_BOLD}[6]{C_END} Change Sync Interval (Current: {config.get('sync_interval', 60)}m)")
-        print(f"  {C_BOLD}[7]{C_END} Exit")
+        print(f"  {C_BOLD}[7]{C_END} Change Widget Display Mode (Current: {config.get('display_mode', 'all')})")
+        print(f"  {C_BOLD}[8]{C_END} Exit")
 
         choice = input(f"\n{C_BOLD}Select choice:{C_END} ").strip()
         if choice == "1":
@@ -128,7 +129,9 @@ def interactive_wizard():
             )
         elif choice == "6":
             change_sync_interval(config)
-        elif choice == "7" or choice.lower() == "q":
+        elif choice == "7":
+            change_display_mode(config)
+        elif choice == "8" or choice.lower() == "q":
             sys.exit(0)
         else:
             print(f"{C_FAIL}Invalid choice.{C_END}")
@@ -469,3 +472,42 @@ def change_sync_interval(config):
         print(f"Sync interval updated to {val} minutes.")
     except ValueError:
         print("Invalid input. Must be an integer.")
+
+
+def change_display_mode(config):
+    mode = config.get("display_mode", "all")
+    target_idx = config.get("target_screen_index", 0)
+    print(f"\n{C_CYAN}Current display mode: {C_BOLD}{mode}{C_END}")
+    if mode == "specific":
+        print(f"{C_CYAN}Target screen index: {C_BOLD}{target_idx}{C_END}")
+    print("\nSelect Display Mode:")
+    print("  [1] All Screens (Widget shows on all connected monitors)")
+    print("  [2] Primary Screen Only (Widget shows on screen index 0)")
+    print("  [3] Specific Screen (Specify target monitor index)")
+    
+    choice = input("\nSelect choice (1-3): ").strip()
+    if choice == "1":
+        config["display_mode"] = "all"
+        save_config(config)
+        print(f"\n{C_GREEN}Display Mode set to: All Screens{C_END}")
+    elif choice == "2":
+        config["display_mode"] = "primary"
+        config["target_screen_index"] = 0
+        save_config(config)
+        print(f"\n{C_GREEN}Display Mode set to: Primary Screen Only{C_END}")
+    elif choice == "3":
+        idx_str = input("Enter target screen index (0, 1, 2...): ").strip()
+        try:
+            idx = int(idx_str)
+            if idx < 0:
+                print(f"{C_FAIL}Index must be non-negative.{C_END}")
+                return
+            config["display_mode"] = "specific"
+            config["target_screen_index"] = idx
+            save_config(config)
+            print(f"\n{C_GREEN}Display Mode set to: Specific Screen (Index {idx}){C_END}")
+        except ValueError:
+            print(f"{C_FAIL}Invalid integer.{C_END}")
+    else:
+        print(f"{C_FAIL}Invalid choice.{C_END}")
+
