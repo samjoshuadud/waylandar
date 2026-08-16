@@ -477,37 +477,43 @@ def change_sync_interval(config):
 def change_display_mode(config):
     mode = config.get("display_mode", "all")
     target_idx = config.get("target_screen_index", 0)
+    target_name = config.get("target_screen_name", "")
     print(f"\n{C_CYAN}Current display mode: {C_BOLD}{mode}{C_END}")
     if mode == "specific":
-        print(f"{C_CYAN}Target screen index: {C_BOLD}{target_idx}{C_END}")
+        target_disp = target_name if target_name else f"Index {target_idx}"
+        print(f"{C_CYAN}Target screen: {C_BOLD}{target_disp}{C_END}")
     print("\nSelect Display Mode:")
     print("  [1] All Screens (Widget shows on all connected monitors)")
-    print("  [2] Primary Screen Only (Widget shows on screen index 0)")
-    print("  [3] Specific Screen (Specify target monitor index)")
+    print("  [2] Primary Screen Only (Widget shows on primary monitor / index 0)")
+    print("  [3] Specific Screen (Specify connector name e.g. DP-1, HDMI-A-1 or index 0, 1)")
     
     choice = input("\nSelect choice (1-3): ").strip()
     if choice == "1":
         config["display_mode"] = "all"
+        config["target_screen_name"] = ""
         save_config(config)
         print(f"\n{C_GREEN}Display Mode set to: All Screens{C_END}")
     elif choice == "2":
         config["display_mode"] = "primary"
         config["target_screen_index"] = 0
+        config["target_screen_name"] = ""
         save_config(config)
         print(f"\n{C_GREEN}Display Mode set to: Primary Screen Only{C_END}")
     elif choice == "3":
-        idx_str = input("Enter target screen index (0, 1, 2...): ").strip()
-        try:
-            idx = int(idx_str)
-            if idx < 0:
-                print(f"{C_FAIL}Index must be non-negative.{C_END}")
-                return
+        inp = input("Enter target screen connector name (e.g. DP-1, HDMI-A-1) or index (0, 1): ").strip()
+        if not inp:
+            print(f"{C_FAIL}Input cannot be empty.{C_END}")
+            return
+        if inp.isdigit():
             config["display_mode"] = "specific"
-            config["target_screen_index"] = idx
-            save_config(config)
-            print(f"\n{C_GREEN}Display Mode set to: Specific Screen (Index {idx}){C_END}")
-        except ValueError:
-            print(f"{C_FAIL}Invalid integer.{C_END}")
+            config["target_screen_index"] = int(inp)
+            config["target_screen_name"] = ""
+            print(f"\n{C_GREEN}Display Mode set to: Specific Screen (Index {inp}){C_END}")
+        else:
+            config["display_mode"] = "specific"
+            config["target_screen_name"] = inp
+            print(f"\n{C_GREEN}Display Mode set to: Specific Screen ({inp}){C_END}")
+        save_config(config)
     else:
         print(f"{C_FAIL}Invalid choice.{C_END}")
 

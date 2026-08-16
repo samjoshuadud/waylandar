@@ -87,6 +87,7 @@ ShellRoot {
 
     property string displayMode: "all"
     property int targetScreenIndex: 0
+    property string targetScreenName: ""
 
     property var displayScreens: {
         let screens = Quickshell.screens;
@@ -94,6 +95,13 @@ ShellRoot {
         if (displayMode === "primary") {
             return [screens[0]];
         } else if (displayMode === "specific") {
+            if (targetScreenName && targetScreenName.trim() !== "") {
+                for (let i = 0; i < screens.length; i++) {
+                    if (screens[i].name === targetScreenName) {
+                        return [screens[i]];
+                    }
+                }
+            }
             let idx = targetScreenIndex;
             if (idx >= 0 && idx < screens.length) {
                 return [screens[idx]];
@@ -143,6 +151,9 @@ ShellRoot {
                     }
                     if (cfg.target_screen_index !== undefined) {
                         targetScreenIndex = cfg.target_screen_index;
+                    }
+                    if (cfg.target_screen_name !== undefined) {
+                        targetScreenName = cfg.target_screen_name;
                     }
                     
                     let enabled = {};
