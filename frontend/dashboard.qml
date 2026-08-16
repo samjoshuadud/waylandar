@@ -15,18 +15,15 @@ ShellRoot {
     property var availableCalendars: []
     property var selectedCalendarIds: ({})
     
-    // Map account IDs to their enabled status
     property var localAccountStates: ({})
     property var localOverrides: ({})
     
-    // Undo toast properties
     property string pendingAccountId: ""
     property string pendingProvider: ""
     property string pendingAccountName: ""
     property bool pendingState: true
     property int undoCountdown: 4
     
-    // Dynamically computes what shows up in the right pane
     property var displayedEvents: {
         let evs = allEvents.filter(function(e) {
             let calId = e.calendar_id;
@@ -38,7 +35,6 @@ ShellRoot {
         
         if (selectedDateStr === "") {
             let now = new Date();
-            // If viewing the CURRENT month, hide past events
             if (currentViewYear === now.getFullYear() && currentViewMonth === now.getMonth()) {
                 let todayStr = now.toDateString();
                 return evs.filter(function(e) {
@@ -61,7 +57,6 @@ ShellRoot {
                 return evs;
             }
         } else {
-            // Filtered: Exact selected date 
             return evs.filter(function(e) {
                 return new Date(e.start).toDateString() === selectedDateStr;
             });
@@ -83,10 +78,8 @@ ShellRoot {
     property string currentMonthStr: ""
     property string authError: ""
     
-    // Tracks when the python script is pulling data
     property bool isFetching: true
 
-    // Generates the 42 cells for the visual calendar grid
     function updateMonthGrid() {
         let year = currentViewYear;
         let month = currentViewMonth;
@@ -306,7 +299,6 @@ ShellRoot {
         }
     }
 
-    // Undo Toast timer and process handlers
     Timer {
         id: undoTimer
         interval: 1000
@@ -467,7 +459,6 @@ ShellRoot {
                 readonly property real overhead: spacing * 4 + 1 * 2
                 readonly property real contentWidth: width - overhead
 
-                // FAR LEFT: Calendars Sidebar
                 Components.CalendarSidebar {
                     id: sidebar
                     width: parent.contentWidth * 0.20
@@ -507,7 +498,6 @@ ShellRoot {
 
                 Rectangle { width: 1; height: parent.height; color: Theme.outline }
 
-                // left pane for the visual calendar grid
                 Components.CalendarGridPane {
                     width: parent.contentWidth * 0.48
                     height: parent.height
@@ -543,7 +533,6 @@ ShellRoot {
                     color: Theme.outline
                 }
 
-                // right pane for the agenda tasks
                 Components.AgendaListPane {
                     width: parent.contentWidth * 0.32
                     height: parent.height
@@ -555,7 +544,6 @@ ShellRoot {
                 }
             }
 
-            // Floating Undo Toast Overlay
             Rectangle {
                 id: undoToast
                 width: 320
@@ -607,3 +595,5 @@ ShellRoot {
         }
     }
 }
+
+

@@ -36,8 +36,8 @@ ShellRoot {
             if (!allRawEvents[i].notified_for) {
                 allRawEvents[i].notified_for = [];
             }
-            let ev = Object.assign({}, allRawEvents[i]); // copy to avoid mutation sharing issues
-            ev.notified_for = allRawEvents[i].notified_for; // Reference the same array so timer mutations persist
+            let ev = Object.assign({}, allRawEvents[i]);
+            ev.notified_for = allRawEvents[i].notified_for;
             
             if (ev.calendar_id && Object.keys(selectedCalendarIds).length > 0 && !selectedCalendarIds[ev.calendar_id]) {
                 continue;
@@ -140,7 +140,7 @@ ShellRoot {
                 } catch(e) {}
             }
             if (!pythonScript.running) {
-                minutesUntilSync = syncInterval; // Reset countdown
+                minutesUntilSync = syncInterval;
                 countdownTimer.restart(); 
                 pythonScript.running = true;
             }
@@ -161,7 +161,6 @@ ShellRoot {
         allRawEvents = Array.isArray(parsedData) ? parsedData : (parsedData.events || []);
         allRawCalendars = Array.isArray(parsedData) ? [] : (parsedData.calendars || []);
         
-        // Auto-select fallback for new providers
         let sel = Object.assign({}, selectedCalendarIds);
         let hasSelected = false;
         for (let i = 0; i < allRawCalendars.length; i++) {
@@ -252,112 +251,118 @@ ShellRoot {
         }
     }
 
-    PanelWindow {
-        id: calendarWindow
-        WlrLayershell.layer: WlrLayer.Bottom
-        
-        anchors {
-            top: true
-            right: true
-        }
-        margins {
-            top: 20
-            right: 20
-        }
-        
-        implicitWidth: Math.max(360, Math.min(480, Screen.width * 0.22))
-        property real chromeHeight: 45 + 1 + 60 + 40  
+    Timer {
+        id: countdownTimer
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: {
+            let now = new Date();
+            shellRoot.currentTime = now;
+            for (let i = 0; i < calendarEvents.length; i++) {
+                let event = calendarEvents[i];
+                let eventStart = new Date(event.start);
+                let diffMins = Math.floor((eventStart.getTime() - now.getTime()) / 60000);
+                
+                if (event.reminders && event.reminders.includes(diffMins) && !event.notified_for.includes(diffMins)) {
+                    let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), "h:mm AP");
+                    notifyProcess.sendNotification("󰃭 " + event.title, "Starts in " + diffMins + " minutes at " + timeStr);
+                    event.notified_for.push(diffMins);
+                }
+            }
 
-        implicitHeight: Math.max(450, Math.min(800, Screen.height * 0.65))
-        color: "transparent"
-        
-        // The Main Background
-        Rectangle {
-            anchors.fill: parent
-            color: Theme.background
-            radius: 20
-            border.color: Theme.outline
-            border.width: 1
+            if (minutesUntilSync > 0) {
+                minutesUntilSync--;
+            }
+            
+            if (minutesUntilSync <= 0) {
+                minutesUntilSync = syncInterval;
+                if (!pythonScript.running) {
+                    pythonScript.running = true;
+                }
+            }
+        }
+    }
 
-            Column {
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+
+            id: calendarWindow
+            WlrLayershell.layer: WlrLayer.Bottom
+            
+            anchors {
+                top: true
+                right: true
+            }
+            margins {
+                top: 20
+                right: 20
+            }
+            
+            implicitWidth: Math.max(360, Math.min(480, (modelData ? modelData.width : Screen.width) * 0.22))
+            property real chromeHeight: 45 + 1 + 60 + 40  
+
+            implicitHeight: Math.max(450, Math.min(800, (modelData ? modelData.height : Screen.height) * 0.65))
+            color: "transparent"
+            
+            Rectangle {
                 anchors.fill: parent
-                anchors.margins: 30
-                spacing: 20
+                color: Theme.background
+                radius: 20
+                border.color: Theme.outline
+                border.width: 1
 
-                Components.WidgetHeader {
-                    calendarCount: shellRoot.calendarCount // Referring to the property on ShellRoot
-                    minutesUntilSync: shellRoot.minutesUntilSync
-                    isSyncing: pythonScript.running
-                    
-                    onSyncRequested: {
-                        if (!pythonScript.running) {
-                            shellRoot.minutesUntilSync = shellRoot.syncInterval; // Reset countdown
-                            countdownTimer.restart();
-                            pythonScript.running = true; 
-                        }
-                    }
-                }
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 30
+                    spacing: 20
 
-                Timer {
-                    id: countdownTimer
-                    interval: 60000 // 1 minute
-                    running: true
-                    repeat: true
-                    onTriggered: {
-                        let now = new Date();
-                        shellRoot.currentTime = now;
-                        for (let i = 0; i < calendarEvents.length; i++) {
-                            let event = calendarEvents[i];
-                            let eventStart = new Date(event.start);
-                            let diffMins = Math.floor((eventStart.getTime() - now.getTime()) / 60000);
-                            
-                            if (event.reminders && event.reminders.includes(diffMins) && !event.notified_for.includes(diffMins)) {
-                                let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), "h:mm AP");
-                                notifyProcess.sendNotification("󰃭 " + event.title, "Starts in " + diffMins + " minutes at " + timeStr);
-                                event.notified_for.push(diffMins); // Mark this specific reminder as fired
-                            }
-                        }
-
-                        if (minutesUntilSync > 0) {
-                            minutesUntilSync--;
-                        }
-                        
-                        if (minutesUntilSync <= 0) {
-                            minutesUntilSync = syncInterval; // Reset to syncInterval for the next hour
-                            if (!pythonScript.running) {
-                                pythonScript.running = true;
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    color: Theme.outline
-                }
-
-                Item {
-                    width: parent.width
-                    height: parent.height - 65
-
-                    Components.CalendarList {
-                        id: calendarList
-                        anchors.fill: parent
-                        events: calendarEvents
-                        errorMessage: authError
+                    Components.WidgetHeader {
+                        calendarCount: shellRoot.calendarCount
+                        minutesUntilSync: shellRoot.minutesUntilSync
                         isSyncing: pythonScript.running
                         
-                        // Fades the list out slightly while fetching new data
-                        opacity: pythonScript.running ? 0.3 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        onSyncRequested: {
+                            if (!pythonScript.running) {
+                                shellRoot.minutesUntilSync = shellRoot.syncInterval;
+                                countdownTimer.restart();
+                                pythonScript.running = true; 
+                            }
+                        }
                     }
 
-                    Components.LoadingSpinner {
-                        active: pythonScript.running
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Theme.outline
+                    }
+
+                    Item {
+                        width: parent.width
+                        height: parent.height - 65
+
+                        Components.CalendarList {
+                            id: calendarList
+                            anchors.fill: parent
+                            events: calendarEvents
+                            errorMessage: authError
+                            isSyncing: pythonScript.running
+                            
+                            opacity: pythonScript.running ? 0.3 : 1.0
+                            Behavior on opacity { NumberAnimation { duration: 250 } }
+                        }
+
+                        Components.LoadingSpinner {
+                            active: pythonScript.running
+                        }
                     }
                 }
             }
         }
     }
 }
+
