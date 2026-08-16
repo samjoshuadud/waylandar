@@ -103,6 +103,11 @@ def migrate_config(data):
         del data["active_provider"]
         modified = True
 
+    # 5. Default display_mode if missing
+    if "display_mode" not in data:
+        data["display_mode"] = "all"
+        modified = True
+
     return modified
 
 
