@@ -29,7 +29,7 @@ Item {
             Rectangle {
                 width: 32; height: 32; radius: 16
                 color: prevMouseArea.containsMouse ? Theme.outline : "transparent"
-                Text { text: "◀"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
+                Text { text: "◀"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: Fonts.px(14) }
                 MouseArea {
                     id: prevMouseArea
                     anchors.fill: parent
@@ -41,9 +41,9 @@ Item {
             
             Text {
                 text: root.currentMonthStr
-                font.pixelSize: 28
+                font.pixelSize: Fonts.px(28)
                 font.bold: true
-                font.family: "Inter"
+                font.family: Fonts.headerFamily
                 color: Theme.colorOnBackground
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -52,7 +52,7 @@ Item {
             Rectangle {
                 width: 32; height: 32; radius: 16
                 color: nextMouseArea.containsMouse ? Theme.outline : "transparent"
-                Text { text: "▶"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: 14 }
+                Text { text: "▶"; anchors.centerIn: parent; color: Theme.primary; font.pixelSize: Fonts.px(14) }
                 MouseArea {
                     id: nextMouseArea
                     anchors.fill: parent
@@ -71,9 +71,9 @@ Item {
                 Text {
                     width: parent.width / 7
                     text: modelData
-                    font.pixelSize: 14
+                    font.pixelSize: Fonts.px(14)
                     font.bold: true
-                    font.family: "Inter"
+                    font.family: Fonts.family
                     color: Theme.primary
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -111,8 +111,8 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: modelData.dayNum
-                    font.pixelSize: 18
-                    font.family: "Inter"
+                    font.pixelSize: Fonts.px(18)
+                    font.family: Fonts.family
                     font.bold: modelData.dateStr === new Date().toDateString()
                     color: modelData.isCurrentMonth ? Theme.colorOnBackground : Theme.colorOnSurfaceVariant
                 }

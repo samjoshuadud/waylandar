@@ -153,6 +153,18 @@ bind = SUPER, C, exec, waylandar-dashboard
 
 ---
 
+## Fonts (Optional)
+
+Fonts are set in `~/.config/waylandar/frontend/Theme.qml` next to the colours:
+
+```qml
+property string fontFamily: "Inter"          // body text
+property string headerFontFamily: fontFamily // titles: month name, "Upcoming Schedule", "Calendars", "Agenda"
+property real fontScale: 1.0                 // multiplies every text size, e.g. 1.15
+```
+
+Use family names as fontconfig reports them (`fc-list : family`); an empty string means the system default font. A `Theme.qml` without these lines keeps the previous look.
+
 ## Matugen Theming (Optional)
 
 On first run, Waylandar extracts a QML theme template to `~/.config/waylandar/theme_template.qml`. To keep colors in sync with your wallpaper, add this to `~/.config/matugen/config.toml`:

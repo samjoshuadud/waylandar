@@ -2,6 +2,14 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    // Fonts. Family names as fontconfig knows them (fc-list : family); an empty
+    // string uses the system default font. headerFontFamily is used for titles
+    // (month name, "Upcoming Schedule", "Calendars", "Agenda"), fontFamily for
+    // everything else. fontScale multiplies every text size.
+    property string fontFamily: "Inter"
+    property string headerFontFamily: fontFamily
+    property real fontScale: 1.0
+
     property color background: Qt.alpha("{{colors.background.default.hex}}", 0.90)
     property color colorOnBackground: "{{colors.on_background.default.hex}}"
     

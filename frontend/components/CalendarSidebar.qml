@@ -117,9 +117,9 @@ Item {
           Text {
               id: sidebarTitle
               text: "Calendars"
-              font.pixelSize: 20
+              font.pixelSize: Fonts.px(20)
               font.bold: true
-              font.family: "Inter"
+              font.family: Fonts.headerFamily
               color: Theme.colorOnBackground
               anchors.left: parent.left
               anchors.right: syncStatusButton.left
@@ -146,8 +146,8 @@ Item {
 
                   Text {
                       text: "↻"
-                      font.pixelSize: 13
-                      font.family: "Inter"
+                      font.pixelSize: Fonts.px(13)
+                      font.family: Fonts.family
                       font.bold: true
                       color: root.authError !== "" ? Theme.error : (root.isSyncing ? Theme.primary : Theme.colorOnSurfaceVariant)
                       anchors.verticalCenter: parent.verticalCenter
@@ -164,8 +164,8 @@ Item {
 
                   Text {
                       text: root.authError !== "" ? "Error" : (root.isSyncing ? "Syncing..." : "Synced")
-                      font.pixelSize: 11
-                      font.family: "Inter"
+                      font.pixelSize: Fonts.px(11)
+                      font.family: Fonts.family
                       font.bold: true
                       color: root.authError !== "" ? Theme.error : (root.isSyncing ? Theme.primary : Theme.colorOnSurfaceVariant)
                       anchors.verticalCenter: parent.verticalCenter
@@ -203,8 +203,8 @@ Item {
                       anchors.margins: 8
                       text: root.authError
                       color: Theme.colorOnBackground
-                      font.pixelSize: 10
-                      font.family: "Inter"
+                      font.pixelSize: Fonts.px(10)
+                      font.family: Fonts.family
                       wrapMode: Text.Wrap
                   }
               }
@@ -236,7 +236,7 @@ Item {
                     Text {
                         width: 12
                         text: root.collapsedAccounts[modelData.id] ? "▶" : "▼"
-                        font.pixelSize: 11
+                        font.pixelSize: Fonts.px(11)
                         color: Theme.colorOnBackground
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: 0.7
@@ -266,7 +266,7 @@ Item {
                             text: "✓"
                             color: Theme.background
                             visible: root.accountStates[modelData.id] !== false
-                            font.pixelSize: 10
+                            font.pixelSize: Fonts.px(10)
                             font.bold: true
                         }
                         
@@ -283,9 +283,9 @@ Item {
                     // Account Name
                     Text {
                         text: modelData.name
-                        font.pixelSize: 13
+                        font.pixelSize: Fonts.px(13)
                         font.bold: true
-                        font.family: "Inter"
+                        font.family: Fonts.family
                         color: root.accountStates[modelData.id] !== false ? Theme.colorOnBackground : Theme.colorOnSurfaceVariant
                         anchors.verticalCenter: parent.verticalCenter
                         elide: Text.ElideRight
@@ -322,15 +322,15 @@ Item {
                                     text: "✓"
                                     color: Theme.background
                                     visible: root.selectedCalendarIds[modelData.id] === true
-                                    font.pixelSize: 10
+                                    font.pixelSize: Fonts.px(10)
                                     font.bold: true
                                 }
                             }
                             
                             Text {
                                 text: modelData.name
-                                font.pixelSize: 12
-                                font.family: "Inter"
+                                font.pixelSize: Fonts.px(12)
+                                font.family: Fonts.family
                                 color: Theme.colorOnBackground
                                 anchors.left: checkbox.right
                                 anchors.leftMargin: 8
@@ -359,9 +359,9 @@ Item {
         anchors.right: parent.right
         anchors.bottomMargin: 15
         text: "Manage Accounts in CLI\n(run 'waylandar' in terminal)"
-        font.pixelSize: 11
+        font.pixelSize: Fonts.px(11)
         font.italic: true
-        font.family: "Inter"
+        font.family: Fonts.family
         horizontalAlignment: Text.AlignHCenter
         color: Theme.colorOnSurfaceVariant
         opacity: 0.6
