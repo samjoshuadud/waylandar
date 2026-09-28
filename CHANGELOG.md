@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Configurable fonts: `fontFamily`, `headerFontFamily` and `fontScale` properties in `Theme.qml` (and the Matugen template). Components read them through a new `Fonts` singleton that falls back to the previous fixed values (`Inter`, scale 1) when a user's `Theme.qml` predates these properties.
+
 ### Fixed
 - Fixed reminder text in `CalendarCard.qml` overflowing its parent container when multiple reminders are set. Text now wraps correctly within the card bounds.
 

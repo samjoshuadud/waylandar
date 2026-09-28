@@ -23,9 +23,9 @@ Item {
         Text {
             width: parent.width
             text: "Upcoming Schedule"
-            font.pixelSize: 18
+            font.pixelSize: Fonts.px(18)
             font.bold: true
-            font.family: "Inter"
+            font.family: Fonts.headerFamily
             color: Theme.colorOnBackground
             elide: Text.ElideRight
         }
@@ -33,8 +33,8 @@ Item {
         Text {
             width: parent.width
             text: root.calendarCount > 0 ? root.calendarCount + " Active Calendars" : ""
-            font.pixelSize: 12
-            font.family: "Inter"
+            font.pixelSize: Fonts.px(12)
+            font.family: Fonts.family
             color: Theme.tertiary
             visible: root.calendarCount > 0
             elide: Text.ElideRight
@@ -47,7 +47,8 @@ Item {
         anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         text: root.isSyncing ? "" : "Syncs in " + root.minutesUntilSync + "m"
-        font.pixelSize: 12
+        font.pixelSize: Fonts.px(12)
+        font.family: Fonts.family
         font.italic: true
         color: Theme.colorOnSurfaceVariant
         elide: Text.ElideRight
@@ -68,9 +69,9 @@ Item {
         Text {
             anchors.centerIn: parent
             text: "Sync"
-            font.pixelSize: 12
+            font.pixelSize: Fonts.px(12)
             font.bold: true
-            font.family: "Inter"
+            font.family: Fonts.family
             color: root.isSyncing ? Theme.colorOnSurfaceVariant : Theme.primary
         }
 

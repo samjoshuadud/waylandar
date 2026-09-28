@@ -19,9 +19,9 @@ Item {
             id: agendaTitle
             // Automatically changes the title if a day is selected
             text: root.selectedDateStr === "" ? "Agenda" : "Agenda - " + new Date(root.selectedDateStr).toLocaleDateString(Qt.locale("en_US"), "ddd, MMM d")
-            font.pixelSize: 24
+            font.pixelSize: Fonts.px(24)
             font.bold: true
-            font.family: "Inter"
+            font.family: Fonts.headerFamily
             color: Theme.colorOnBackground
         }
         

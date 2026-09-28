@@ -54,9 +54,9 @@ Rectangle {
 
             Text {
                 text: eventData ? eventData.title : ""
-                font.pixelSize: 14
+                font.pixelSize: Fonts.px(14)
                 font.bold: true
-                font.family: "Inter"
+                font.family: Fonts.family
                 color: Theme.colorOnBackground
                 elide: Text.ElideRight
                 width: parent.width
@@ -96,8 +96,8 @@ Rectangle {
                     
                     return d.toLocaleDateString(loc, "ddd MMM d") + " at " + timeRange + " • " + (eventData.calendar_name || "Unknown") + ongoingBadge;
                 }
-                font.pixelSize: 12
-                font.family: "Inter"
+                font.pixelSize: Fonts.px(12)
+                font.family: Fonts.family
                 color: Theme.colorOnSurfaceVariant
                 elide: Text.ElideRight
                 width: parent.width
@@ -132,8 +132,8 @@ Rectangle {
                     let textArr = eventData.reminders.map(r => r === 0 ? "At time of event" : r + " minutes before");
                     return "🔔 Reminder: " + textArr.join(", ");
                 }
-                font.pixelSize: 12
-                font.family: "Inter"
+                font.pixelSize: Fonts.px(12)
+                font.family: Fonts.family
                 font.bold: true
                 color: Theme.tertiary
                 width: parent.width
@@ -142,8 +142,8 @@ Rectangle {
 
             Text {
                 text: eventData && eventData.description ? eventData.description : "No additional description."
-                font.pixelSize: 12
-                font.family: "Inter"
+                font.pixelSize: Fonts.px(12)
+                font.family: Fonts.family
                 color: Theme.colorOnSurfaceVariant
                 wrapMode: Text.WordWrap
                 width: parent.width
@@ -162,9 +162,9 @@ Rectangle {
                     spacing: 8
                     Text {
                         text: "Open in Browser"
-                        font.pixelSize: 12
+                        font.pixelSize: Fonts.px(12)
                         font.bold: true
-                        font.family: "Inter"
+                        font.family: Fonts.family
                         color: Theme.colorOnPrimary
                     }
                 }

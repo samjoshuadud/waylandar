@@ -570,8 +570,8 @@ ShellRoot {
                         width: parent.width - 70
                         text: "Disabling " + pendingAccountName + " (" + undoCountdown + "s)"
                         color: Theme.colorOnSurface
-                        font.pixelSize: 12
-                        font.family: "Inter"
+                        font.pixelSize: Fonts.px(12)
+                        font.family: Fonts.family
                         elide: Text.ElideRight
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -579,9 +579,9 @@ ShellRoot {
                     Text {
                         text: "Undo"
                         color: Theme.primary
-                        font.pixelSize: 12
+                        font.pixelSize: Fonts.px(12)
                         font.bold: true
-                        font.family: "Inter"
+                        font.family: Fonts.family
                         anchors.verticalCenter: parent.verticalCenter
                         
                         MouseArea {

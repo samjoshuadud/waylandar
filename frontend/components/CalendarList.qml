@@ -32,7 +32,8 @@ ListView {
     Text {
         visible: events.length === 0 && !isSyncing && errorMessage === ""
         text: "Your schedule is clear!"
-        font.pixelSize: 14
+        font.pixelSize: Fonts.px(14)
+        font.family: Fonts.family
         font.italic: true
         color: Theme.colorOnSurfaceVariant
         anchors.centerIn: parent
@@ -58,7 +59,7 @@ ListView {
                 anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 text: "⚠️"
-                font.pixelSize: 14
+                font.pixelSize: Fonts.px(14)
             }
             
             Text {
@@ -69,8 +70,8 @@ ListView {
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Sync Alert:\n" + errorMessage
-                font.pixelSize: 11
-                font.family: "Inter"
+                font.pixelSize: Fonts.px(11)
+                font.family: Fonts.family
                 color: Theme.colorOnSurface
                 wrapMode: Text.WrapAnywhere
             }
@@ -89,8 +90,8 @@ ListView {
             id: errorText
             width: parent.width
             text: errorMessage
-            font.pixelSize: 12
-            font.family: "Inter"
+            font.pixelSize: Fonts.px(12)
+            font.family: Fonts.family
             color: Theme.colorOnBackground
             wrapMode: Text.WrapAnywhere
             horizontalAlignment: Text.AlignHCenter
@@ -107,9 +108,9 @@ ListView {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8
             text: section 
-            font.pixelSize: 13
+            font.pixelSize: Fonts.px(13)
             font.bold: true
-            font.family: "Inter"
+            font.family: Fonts.family
             color: Theme.primary 
         }
         
