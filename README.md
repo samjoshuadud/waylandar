@@ -179,6 +179,10 @@ Because Matugen regenerates `Theme.qml` from the template, the template is where
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Please disclose AI-assisted PRs in the description.
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
