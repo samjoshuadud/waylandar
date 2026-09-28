@@ -175,6 +175,8 @@ input_path = "~/.config/waylandar/theme_template.qml"
 output_path = "~/.config/waylandar/frontend/Theme.qml"
 ```
 
+Because Matugen regenerates `Theme.qml` from the template, the template is where Matugen users change anything that isn't a wallpaper colour. It is yours to edit and is preserved across upgrades. Delete it if you ever want the packaged version back.
+
 ---
 
 ## Changelog

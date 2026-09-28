@@ -55,8 +55,11 @@ ln -sfn /usr/share/waylandar/frontend/*.qml ~/.config/waylandar/frontend/ 2>/dev
 ln -sfn /usr/share/waylandar/frontend/components/*.qml ~/.config/waylandar/frontend/components/ 2>/dev/null || true
 
 if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
-cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
-chmod 644 ~/.config/waylandar/theme_template.qml
+# Keep the user's template: matugen users edit it to set fonts and colours.
+if [ ! -f ~/.config/waylandar/theme_template.qml ]; then
+  cp /usr/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
+  chmod 644 ~/.config/waylandar/theme_template.qml
+fi
 if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
   cp /usr/share/waylandar/fallback_Theme.qml ~/.config/waylandar/frontend/Theme.qml
   chmod 644 ~/.config/waylandar/frontend/Theme.qml

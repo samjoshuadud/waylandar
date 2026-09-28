@@ -55,9 +55,12 @@
           # Restore the Matugen theme backup AFTER the symlinks are generated, so it safely overwrites the default symlink
           if [ -f ~/.config/waylandar/Theme.qml.bak ]; then mv ~/.config/waylandar/Theme.qml.bak ~/.config/waylandar/frontend/Theme.qml; fi
           
-          # Copy the template for Matugen to use
-          cp $out/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
-          chmod 644 ~/.config/waylandar/theme_template.qml
+          # Copy the template for Matugen to use, but keep the user's:
+          # matugen users edit it to set fonts and colours.
+          if [ ! -f ~/.config/waylandar/theme_template.qml ]; then
+            cp $out/share/waylandar/theme_template.qml ~/.config/waylandar/theme_template.qml
+            chmod 644 ~/.config/waylandar/theme_template.qml
+          fi
           
           # Copy the fallback Theme.qml ONLY if Matugen hasn't generated one
           if [ ! -f ~/.config/waylandar/frontend/Theme.qml ]; then
