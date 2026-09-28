@@ -165,6 +165,8 @@ property real fontScale: 1.0                 // multiplies every text size, e.g.
 
 Use family names as fontconfig reports them (`fc-list : family`); an empty string means the system default font. A `Theme.qml` without these lines keeps the previous look.
 
+If you use Matugen, `Theme.qml` is regenerated from your wallpaper, so set these in `theme_template.qml` instead. See [Matugen Theming](#matugen-theming-optional) below.
+
 ## Matugen Theming (Optional)
 
 On first run, Waylandar extracts a QML theme template to `~/.config/waylandar/theme_template.qml`. To keep colors in sync with your wallpaper, add this to `~/.config/matugen/config.toml`:
