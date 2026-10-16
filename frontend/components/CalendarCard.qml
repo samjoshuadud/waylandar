@@ -4,6 +4,7 @@ import ".."
 Rectangle {
     property var eventData: null
     property bool isExpanded: false
+    property string timeFormat: "12h"
     signal toggleExpand()
     
     height: isExpanded ? Math.max(110, 80 + expandedDetails.height) : 55
@@ -79,7 +80,8 @@ Rectangle {
                         endD = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
                     }
 
-                    let loc = Qt.locale("en_US"); 
+                    let loc = Qt.locale("en_US");
+                    let fmt = (timeFormat === "24h") ? "HH:mm" : "h:mm AP";
                     let now = new Date();
                     
                     let isOngoing = (d <= now && now <= endD);
@@ -89,9 +91,9 @@ Rectangle {
                         return d.toLocaleDateString(loc, "ddd MMM d") + " (All Day) • " + (eventData.calendar_name || "Unknown") + ongoingBadge;
                     }
                     
-                    let timeRange = d.toLocaleTimeString(loc, "h:mm AP");
+                    let timeRange = d.toLocaleTimeString(loc, fmt);
                     if (eventData.end && eventData.end !== eventData.start) {
-                        timeRange += " - " + endD.toLocaleTimeString(loc, "h:mm AP");
+                        timeRange += " - " + endD.toLocaleTimeString(loc, fmt);
                     }
                     
                     return d.toLocaleDateString(loc, "ddd MMM d") + " at " + timeRange + " • " + (eventData.calendar_name || "Unknown") + ongoingBadge;

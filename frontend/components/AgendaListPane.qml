@@ -9,6 +9,7 @@ Item {
     property var displayedEvents
     property string authError
     property bool isFetching
+    property string timeFormat: "12h"
 
     Column {
         anchors.fill: parent
@@ -32,6 +33,7 @@ Item {
             events: root.displayedEvents
             errorMessage: root.authError
             isSyncing: root.isFetching
+            timeFormat: root.timeFormat
             
             // Dim the agenda list when fetching
             opacity: root.isFetching ? 0.3 : 1.0

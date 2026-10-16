@@ -88,6 +88,7 @@ ShellRoot {
     property string displayMode: "all"
     property int targetScreenIndex: 0
     property string targetScreenName: ""
+    property string timeFormat: "12h"
 
     property var displayScreens: {
         let screens = Quickshell.screens;
@@ -154,6 +155,9 @@ ShellRoot {
                     }
                     if (cfg.target_screen_name !== undefined) {
                         targetScreenName = cfg.target_screen_name;
+                    }
+                    if (cfg.time_format !== undefined) {
+                        timeFormat = cfg.time_format === "24h" ? "24h" : "12h";
                     }
                     
                     let enabled = {};
@@ -300,7 +304,8 @@ ShellRoot {
                 let diffMins = Math.floor((eventStart.getTime() - now.getTime()) / 60000);
                 
                 if (event.reminders && event.reminders.includes(diffMins) && !event.notified_for.includes(diffMins)) {
-                    let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), "h:mm AP");
+                    let fmt = (shellRoot.timeFormat === "24h") ? "HH:mm" : "h:mm AP";
+                    let timeStr = eventStart.toLocaleTimeString(Qt.locale("en_US"), fmt);
                     notifyProcess.sendNotification("󰃭 " + event.title, "Starts in " + diffMins + " minutes at " + timeStr);
                     event.notified_for.push(diffMins);
                 }
@@ -386,6 +391,7 @@ ShellRoot {
                             events: calendarEvents
                             errorMessage: authError
                             isSyncing: pythonScript.running
+                            timeFormat: shellRoot.timeFormat
                             
                             opacity: pythonScript.running ? 0.3 : 1.0
                             Behavior on opacity { NumberAnimation { duration: 250 } }

@@ -12,10 +12,12 @@ ListView {
     property int expandedIndex: -1
     property string errorMessage: ""
     property bool isSyncing: false
+    property string timeFormat: "12h"
 
     delegate: CalendarCard {
         width: ListView.view.width
         eventData: modelData 
+        timeFormat: ListView.view.timeFormat
         
         // Pass down the expansion state
         isExpanded: expandedIndex === index

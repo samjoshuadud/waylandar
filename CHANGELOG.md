@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Configurable time format: support for 24-hour time format alongside the default 12-hour format via `config.json` (`"time_format": "24h"`) and the interactive setup wizard.
 - `overlays.default` flake output so NixOS users can build waylandar against their own nixpkgs (`nixpkgs.overlays = [ waylandar.overlays.default ];` then `pkgs.waylandar`). The README install snippet now uses it together with `inputs.nixpkgs.follows`.
 - Configurable fonts: `fontFamily`, `headerFontFamily` and `fontScale` properties in `Theme.qml` (and the Matugen template). Components read them through a new `Fonts` singleton that falls back to the previous fixed values (`Inter`, scale 1) when a user's `Theme.qml` predates these properties.
 

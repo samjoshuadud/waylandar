@@ -134,6 +134,9 @@ If you prefer to sync your calendar files manually using tools like `vdirsyncer`
 
 Waylandar acts as a decoupled filesystem parser. It will safely recurse through the folder you provide, bypass hidden metadata folders (like `.vdirsyncer/`), and instantly sync any `.ics` files it finds directly into the widget UI. You remain fully responsible for downloading/syncing those files via your external tool of choice.
 
+### Time Format (12-hour / 24-hour)
+Waylandar defaults to 12-hour time format (`"12h"`). You can switch to 24-hour format (`"24h"`) either through the interactive setup wizard (`[8] Change Time Format`) or by setting `"time_format": "24h"` in `~/.config/waylandar/config.json`.
+
 ---
 
 ## Usage

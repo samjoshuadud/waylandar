@@ -108,6 +108,13 @@ def migrate_config(data):
         data["display_mode"] = "all"
         modified = True
 
+    # 6. Default and validate time_format
+    raw_tf = str(data.get("time_format", "12h")).lower()
+    normalized_tf = "24h" if raw_tf in ("24h", "24") else "12h"
+    if data.get("time_format") != normalized_tf:
+        data["time_format"] = normalized_tf
+        modified = True
+
     return modified
 
 

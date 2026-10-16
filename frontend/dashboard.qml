@@ -120,6 +120,7 @@ ShellRoot {
     onCurrentViewYearChanged: updateMonthGrid()
 
     property var parsedConfig: ({})
+    property string timeFormat: (parsedConfig && parsedConfig.time_format === "24h") ? "24h" : "12h"
 
     FileView {
         id: configFileWatcher
@@ -541,6 +542,7 @@ ShellRoot {
                     displayedEvents: shellRoot.displayedEvents
                     authError: shellRoot.authError
                     isFetching: shellRoot.isFetching
+                    timeFormat: shellRoot.timeFormat
                 }
             }
 

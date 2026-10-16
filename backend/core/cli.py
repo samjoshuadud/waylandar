@@ -79,7 +79,8 @@ def interactive_wizard():
         print(f"  {C_BOLD}[5]{C_END} Local Directories (.ics files)")
         print(f"  {C_BOLD}[6]{C_END} Change Sync Interval (Current: {config.get('sync_interval', 60)}m)")
         print(f"  {C_BOLD}[7]{C_END} Change Widget Display Mode (Current: {config.get('display_mode', 'all')})")
-        print(f"  {C_BOLD}[8]{C_END} Exit")
+        print(f"  {C_BOLD}[8]{C_END} Change Time Format (Current: {config.get('time_format', '12h')})")
+        print(f"  {C_BOLD}[9]{C_END} Exit")
 
         choice = input(f"\n{C_BOLD}Select choice:{C_END} ").strip()
         if choice == "1":
@@ -131,7 +132,9 @@ def interactive_wizard():
             change_sync_interval(config)
         elif choice == "7":
             change_display_mode(config)
-        elif choice == "8" or choice.lower() == "q":
+        elif choice == "8":
+            change_time_format(config)
+        elif choice == "9" or choice.lower() == "q":
             sys.exit(0)
         else:
             print(f"{C_FAIL}Invalid choice.{C_END}")
@@ -514,6 +517,26 @@ def change_display_mode(config):
             config["target_screen_name"] = inp
             print(f"\n{C_GREEN}Display Mode set to: Specific Screen ({inp}){C_END}")
         save_config(config)
+    else:
+        print(f"{C_FAIL}Invalid choice.{C_END}")
+
+
+def change_time_format(config):
+    current = config.get("time_format", "12h")
+    print(f"\n{C_CYAN}Current time format: {C_BOLD}{current}{C_END}")
+    print("\nSelect Time Format:")
+    print("  [1] 12-hour format (e.g. 2:30 PM)")
+    print("  [2] 24-hour format (e.g. 14:30)")
+
+    choice = input("\nSelect choice (1-2): ").strip()
+    if choice == "1":
+        config["time_format"] = "12h"
+        save_config(config)
+        print(f"\n{C_GREEN}Time format set to: 12-hour (12h){C_END}")
+    elif choice == "2":
+        config["time_format"] = "24h"
+        save_config(config)
+        print(f"\n{C_GREEN}Time format set to: 24-hour (24h){C_END}")
     else:
         print(f"{C_FAIL}Invalid choice.{C_END}")
 
