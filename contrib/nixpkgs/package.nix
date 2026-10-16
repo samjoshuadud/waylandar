@@ -71,7 +71,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "samjoshuadud";
     repo = "waylandar";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-axRpXgeuTqHWgz56EbWKPj4q2yNaLnVs/UXSuY3NxvM=";
+    hash = "sha256-NEP4NhMCeXAc2isHeFTfH/byXV0o2kHg37xZUhFsBNU=";
   };
 
   strictDeps = true;
