@@ -5,13 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-16
+
 ### Added
 - Configurable time format: support for 24-hour time format alongside the default 12-hour format via `config.json` (`"time_format": "24h"`) and the interactive setup wizard.
 - `overlays.default` flake output so NixOS users can build waylandar against their own nixpkgs (`nixpkgs.overlays = [ waylandar.overlays.default ];` then `pkgs.waylandar`). The README install snippet now uses it together with `inputs.nixpkgs.follows`.
 - Configurable fonts: `fontFamily`, `headerFontFamily` and `fontScale` properties in `Theme.qml` (and the Matugen template). Components read them through a new `Fonts` singleton that falls back to the previous fixed values (`Inter`, scale 1) when a user's `Theme.qml` predates these properties.
 
 ### Fixed
-- Widget and dashboard rendering nothing (`EGL not available`) after a system update on NixOS. The pinned quickshell was built against an older glibc than the system's graphics drivers and could not load them; installing through the overlay keeps both in sync.
+- Widget and dashboard rendering nothing (`EGL not available`) after a system update on NixOS. The pinned quickshell was built against an older glibc than the system's graphics drivers and could not load them. Installing through the overlay keeps both in sync, and the updated `flake.lock` fixes `nix run` and `nix profile` installs.
 - `theme_template.qml` is no longer overwritten on every launch. It is now seeded only when missing, so Matugen users can edit the template (the only place their settings survive, since `Theme.qml` is regenerated from it) without losing their changes. Delete the file to get the packaged version back.
 - Fixed reminder text in `CalendarCard.qml` overflowing its parent container when multiple reminders are set. Text now wraps correctly within the card bounds.
 

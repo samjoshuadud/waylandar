@@ -1,6 +1,6 @@
 pkgname=waylandar-git
-pkgver=1.0.0
-pkgrel=3
+pkgver=1.5.0
+pkgrel=1
 pkgdesc="A standalone Wayland Calendar widget built with Quickshell and Python (Supports Google & Nextcloud)"
 arch=('any')
 url="https://github.com/samjoshuadud/waylandar" 

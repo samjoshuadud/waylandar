@@ -22,7 +22,7 @@
 
       mkWaylandar = pkgs: let pythonEnv = mkPythonEnv pkgs; in pkgs.stdenv.mkDerivation {
         pname = "waylandar";
-        version = "1.0.0";
+        version = "1.5.0";
         src = ./.;
 
         buildInputs = [ pkgs.makeWrapper ];
