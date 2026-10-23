@@ -175,7 +175,7 @@ def manage_submenu(config, provider_key, list_key, label_singular, label_plural,
         print("\nOptions:")
         print(f"  {C_BOLD}[A]{C_END} Add a {label_singular}")
         if items:
-            print(f"  {C_BOLD}[T]{C_END} Toggle {label_singular.lower()} status (Enable/Disable)")
+            print(f"  {C_BOLD}[T]{C_END} Toggle {label_singular.lower()} syncing (Enable/Disable)")
             print(f"  {C_BOLD}[R]{C_END} Rename {label_singular.lower()} label")
             print(f"  {C_BOLD}[D]{C_END} Delete {label_singular.lower()}")
         print(f"  {C_BOLD}[B]{C_END} Back to main menu")

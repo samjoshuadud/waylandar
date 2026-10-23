@@ -83,7 +83,7 @@ quickshell -p frontend/widget.qml
 
 ## Configuration & Setup
 
-Waylandar includes an interactive setup wizard that allows you to easily configure multiple accounts, toggle calendar visibilities, and manage your sync preferences.
+Waylandar includes an interactive setup wizard that allows you to easily configure multiple accounts, enable or disable syncing per account, and manage your sync preferences.
 
 Run the wizard from your terminal:
 ```bash
@@ -133,6 +133,13 @@ You can subscribe to as many ICS feeds as you want. The widget will seamlessly m
 If you prefer to sync your calendar files manually using tools like `vdirsyncer`, Nextcloud Desktop, Syncthing, or custom bash scripts, you can point Waylandar to a local directory.
 
 Waylandar acts as a decoupled filesystem parser. It will safely recurse through the folder you provide, bypass hidden metadata folders (like `.vdirsyncer/`), and instantly sync any `.ics` files it finds directly into the widget UI. You remain fully responsible for downloading/syncing those files via your external tool of choice.
+
+### Enabled vs. Selected
+These are two separate switches:
+- **Enabled / Disabled** (setup wizard, or the account toggle in the dashboard sidebar): controls whether an account is **synced** at all. Disabled accounts are not fetched.
+- **Calendar checkboxes** (dashboard sidebar): only **show or hide** a calendar's events in the view. Unchecked calendars keep syncing. This is stored in `~/.cache/waylandar/selected_cals.json`, not in your config.
+
+So an account can show `[Enabled]` in the wizard while its calendars are unchecked in the dashboard. Check them in the sidebar to show their events.
 
 ### Time Format (12-hour / 24-hour)
 Waylandar defaults to 12-hour time format (`"12h"`). You can switch to 24-hour format (`"24h"`) either through the interactive setup wizard (`[8] Change Time Format`) or by setting `"time_format": "24h"` in `~/.config/waylandar/config.json`.
