@@ -6,7 +6,7 @@ arch=('any')
 url="https://github.com/samjoshuadud/waylandar" 
 license=('MIT') 
 depends=(
-    'quickshell-git'
+    'quickshell'
     'python'
     'python-google-api-python-client'
     'python-google-auth-httplib2'

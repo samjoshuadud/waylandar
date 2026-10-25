@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Arch installs no longer require `quickshell-git`. The package depends on `quickshell`, which `extra/quickshell` and AUR `quickshell-git` both satisfy, so a niri shell that already has Quickshell does not have to be replaced.
+
 ## [1.5.0] - 2026-10-16
 
 ### Added

@@ -2,7 +2,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/samjoshuadud/waylandar?style=flat-square)](https://github.com/samjoshuadud/waylandar/stargazers)
 
-A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland** and Sway.
+A standalone Wayland Calendar widget and dashboard built with Quickshell (QML) and Python. Fully compatible with modern Wayland compositors like **Hyprland**, **niri**, and Sway.
 
 Officially supports configuring **multiple concurrent accounts** for all providers: **Google Calendar**, **Nextcloud Calendar (CalDAV)**, **Apple iCloud Calendar**, **ICS Feed Subscriptions**, and **Local Directories** (for parsing local `.ics` files managed by vdirsyncer, Nextcloud Client, or custom scripts).
 
@@ -55,19 +55,20 @@ nix profile install github:samjoshuadud/waylandar
 
 ### Arch Linux
 
-AUR publishing is temporarily blocked due to the ongoing chain attack mitigation. Install locally for now:
+AUR publishing is temporarily blocked due to the ongoing chain attack mitigation. Install locally for now.
 
-> **Note:** `quickshell-git` and `uv` are required before running `makepkg -si`.
+Waylandar runs as its own Quickshell config (`quickshell -p …`). It uses the `quickshell` binary already on the system. It does not need a second install. Niri shells such as DankMaterialShell (`dms-shell`) already depend on `extra/quickshell`. Leave that package in place. `quickshell-git` from the AUR conflicts with it and would replace the build your shell is running.
 
 ```bash
-# Install the required dependencies first
-yay -S quickshell-git uv
+# Skip this if `pacman -Q quickshell` already succeeds (dms-shell, ii-niri, and similar).
+sudo pacman -S quickshell
 
-# Clone and build
 git clone https://github.com/samjoshuadud/waylandar.git
 cd waylandar
 makepkg -si
 ```
+
+`quickshell-git` also satisfies the dependency, because that package provides `quickshell`. Keep whichever one the shell installed.
 
 ### Manual
 
@@ -162,6 +163,19 @@ bind = SUPER, C, exec, waylandar-dashboard
 ```
 
 > If you installed manually, replace `waylandar-widget` / `waylandar-dashboard` with `quickshell -p /path/to/waylandar/frontend/widget.qml`.
+
+### Niri
+
+Same launchers. Niri’s shell (DankMaterialShell, ii, and others) keeps its own Quickshell config. Waylandar starts a second process against a different path, so the bar stays up.
+
+```kdl
+// ~/.config/niri/config.kdl
+spawn-at-startup "waylandar-widget"
+
+binds {
+    Mod+C { spawn "waylandar-dashboard"; }
+}
+```
 
 ---
 
