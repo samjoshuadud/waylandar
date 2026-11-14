@@ -58,6 +58,23 @@ class TestConfigMigrationAndValidation(unittest.TestCase):
                     saved = json.load(f)
                 self.assertEqual(saved.get("time_format"), "12h")
 
+    def test_layer_settings_are_optional(self):
+        data = {"providers": {}, "display_mode": "all", "time_format": "12h"}
+        self.assertFalse(config.migrate_config(data))
+        self.assertNotIn("widget_layer", data)
+        self.assertNotIn("dashboard_layer", data)
+
+    def test_load_config_preserves_independent_layers(self):
+        for layer in ("background", "bottom", "top", "overlay"):
+            with self.subTest(layer=layer), tempfile.TemporaryDirectory() as tmpdir:
+                test_cfg_path = os.path.join(tmpdir, "config.json")
+                with open(test_cfg_path, "w") as f:
+                    json.dump({"widget_layer": layer, "dashboard_layer": "top"}, f)
+                with patch.object(config, "CONFIG_PATH", test_cfg_path):
+                    cfg = config.load_config()
+                self.assertEqual(cfg["widget_layer"], layer)
+                self.assertEqual(cfg["dashboard_layer"], "top")
+
     def test_load_config_preserves_24h(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             test_cfg_path = os.path.join(tmpdir, "config.json")

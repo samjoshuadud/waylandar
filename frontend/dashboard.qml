@@ -120,6 +120,7 @@ ShellRoot {
     onCurrentViewYearChanged: updateMonthGrid()
 
     property var parsedConfig: ({})
+    property string dashboardLayer: typeof parsedConfig.dashboard_layer === "string" ? parsedConfig.dashboard_layer.trim().toLowerCase() : "overlay"
     property string timeFormat: (parsedConfig && parsedConfig.time_format === "24h") ? "24h" : "12h"
 
     FileView {
@@ -393,7 +394,14 @@ ShellRoot {
 
     PanelWindow {
         id: dashboardWindow
-        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.layer: {
+            switch (shellRoot.dashboardLayer) {
+            case "background": return WlrLayer.Background;
+            case "bottom": return WlrLayer.Bottom;
+            case "top": return WlrLayer.Top;
+            default: return WlrLayer.Overlay;
+            }
+        }
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
         
         anchors {

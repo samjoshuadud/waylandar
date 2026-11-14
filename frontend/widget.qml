@@ -89,6 +89,7 @@ ShellRoot {
     property int targetScreenIndex: 0
     property string targetScreenName: ""
     property string timeFormat: "12h"
+    property string widgetLayer: "bottom"
 
     property var displayScreens: {
         let screens = Quickshell.screens;
@@ -144,6 +145,7 @@ ShellRoot {
             if (content) {
                 try {
                     let cfg = JSON.parse(content);
+                    widgetLayer = typeof cfg.widget_layer === "string" ? cfg.widget_layer.trim().toLowerCase() : "bottom";
                     if (cfg.sync_interval !== undefined && cfg.sync_interval !== syncInterval) {
                         syncInterval = cfg.sync_interval;
                     }
@@ -332,7 +334,14 @@ ShellRoot {
             screen: modelData
 
             id: calendarWindow
-            WlrLayershell.layer: WlrLayer.Bottom
+            WlrLayershell.layer: {
+                switch (shellRoot.widgetLayer) {
+                case "background": return WlrLayer.Background;
+                case "top": return WlrLayer.Top;
+                case "overlay": return WlrLayer.Overlay;
+                default: return WlrLayer.Bottom;
+                }
+            }
             
             anchors {
                 top: true

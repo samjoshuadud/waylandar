@@ -142,6 +142,19 @@ These are two separate switches:
 
 So an account can show `[Enabled]` in the wizard while its calendars are unchecked in the dashboard. Check them in the sidebar to show their events.
 
+### Wayland Layers
+
+Set the widget and dashboard layers separately in `~/.config/waylandar/config.json`:
+
+```json
+{
+  "widget_layer": "bottom",
+  "dashboard_layer": "overlay"
+}
+```
+
+Both keys are optional. Valid values are `background`, `bottom`, `top`, and `overlay` (from lowest to highest). Missing or invalid values keep the original defaults: `bottom` for the widget and `overlay` for the dashboard. Changes apply while Waylandar is running; removing a key restores its default.
+
 ### Time Format (12-hour / 24-hour)
 Waylandar defaults to 12-hour time format (`"12h"`). You can switch to 24-hour format (`"24h"`) either through the interactive setup wizard (`[8] Change Time Format`) or by setting `"time_format": "24h"` in `~/.config/waylandar/config.json`.
 
