@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Separate, optional `widget_layer` and `dashboard_layer` settings in `config.json`, supporting `background`, `bottom`, `top`, and `overlay` with live updates. Missing or invalid values keep the original defaults: `bottom` for the widget and `overlay` for the dashboard.
+
 ### Fixed
 - Arch installs no longer require `quickshell-git`. The package depends on `quickshell`, which `extra/quickshell` and AUR `quickshell-git` both satisfy, so a niri shell that already has Quickshell does not have to be replaced.
 
