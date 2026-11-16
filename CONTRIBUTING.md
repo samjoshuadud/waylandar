@@ -46,6 +46,22 @@ can explain why it works.
 - Add a `## [Unreleased]` entry to [CHANGELOG.md](CHANGELOG.md) under Added /
   Changed / Fixed.
 - Match the surrounding style. There is no linter to argue with.
+- Use [Conventional Commits](https://www.conventionalcommits.org/) for commit
+  messages, see below.
+
+### Commit messages
+
+Write commit messages as `type(scope): summary`, where the scope is optional:
+
+```
+feat: add configurable 12-hour and 24-hour time format
+fix(theme): stop overwriting theme_template.qml on every launch
+docs: clarify enabled (sync) vs selected (visibility) calendars
+```
+
+Common types are `feat` (new feature), `fix` (bug fix), `docs`, `refactor`,
+`test` and `chore` (packaging, releases, CI). Keep the summary short, lowercase
+and in the imperative ("add", not "added").
 
 ### Things that are easy to get wrong here
 
